@@ -1,0 +1,66 @@
+/* Yo adapto la interfaz a teléfonos, tabletas, laptops y pantallas grandes. */
+
+/* ---------- Teléfonos en vertical y tabletas estrechas ---------- */
+@media (max-width: 820px) and (orientation: portrait) {
+  /* Yo apilo marca y acciones en una sola columna. */
+  .menu { grid-template-columns: 1fr; align-content: center; gap: var(--sp-4); }
+  .menu__actions { width: min(460px, 100%); margin-inline: auto; }
+  .logo--menu { font-size: clamp(3rem, 16vw, 5rem); }
+  /* Yo agrando el HUD a la zona táctil en vertical. */
+  .hud { grid-template-columns: 1fr auto; grid-template-areas: 'left right' 'center center'; row-gap: var(--sp-2); }
+  .hud__left { grid-area: left; }
+  .hud__right { grid-area: right; }
+  .hud__center { grid-area: center; justify-self: center; }
+}
+
+/* ---------- Teléfonos en horizontal (poca altura) ---------- */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Yo comprimo espacios verticales para que todo quepa sin scroll. */
+  .screen { padding-top: calc(var(--safe-t) + 6px); padding-bottom: calc(var(--safe-b) + 6px); }
+  .topbar { min-height: 44px; margin-bottom: var(--sp-2); }
+  .menu { grid-template-columns: 1fr minmax(280px, 380px); gap: var(--sp-4); }
+  .mascot--lg { width: 64px; height: 64px; }
+  .logo--menu { font-size: clamp(2.4rem, 9vh, 4rem); }
+  .tagline { margin-top: .5em; font-size: var(--fs-sm); }
+  .btn--xl { min-height: 52px; }
+  .mode-card { min-height: 52px; padding: .45em .8em; }
+  .mode-card__icon { width: 30px; height: 30px; }
+  .tile-btn { padding: .45em .2em; }
+  .tile-btn .icon { width: 22px; height: 22px; }
+  .mascot--xl { width: 88px; height: 88px; }
+  .splash .btn { margin-top: var(--sp-3); }
+  .panel { padding: var(--sp-4); }
+  .panel__title { font-size: var(--fs-lg); }
+  .stars-row .icon { width: 40px; height: 40px; }
+  .level-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
+  .touch__btn { width: calc(66px * var(--touch-scale)); height: calc(66px * var(--touch-scale)); }
+  .touch__btn--jump { width: calc(80px * var(--touch-scale)); height: calc(80px * var(--touch-scale)); }
+  .touch { padding-bottom: calc(var(--safe-b) + 10px); }
+}
+
+/* ---------- Pantallas muy pequeñas ---------- */
+@media (max-width: 360px) {
+  .menu__grid { grid-template-columns: repeat(2, 1fr); }
+  .result-stats { grid-template-columns: 1fr 1fr 1fr; }
+  .touch__btn { width: calc(64px * var(--touch-scale)); height: calc(64px * var(--touch-scale)); }
+}
+
+/* ---------- Tabletas ---------- */
+@media (min-width: 821px) and (max-width: 1199px) {
+  .level-grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+}
+
+/* ---------- Escritorio y TV ---------- */
+@media (min-width: 1600px) {
+  /* Yo escalo la raíz para que la interfaz no se vea diminuta en monitores grandes. */
+  html { font-size: 19px; }
+  .icon-btn { width: 56px; height: 56px; }
+  .level-grid { grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); }
+}
+@media (min-width: 2400px) { html { font-size: 24px; } }
+
+/* ---------- Dispositivos con mouse ---------- */
+@media (hover: hover) and (pointer: fine) {
+  /* Yo reduzco el tamaño de botones táctiles si alguien los fuerza en PC. */
+  .touch__btn { width: calc(60px * var(--touch-scale)); height: calc(60px * var(--touch-scale)); }
+}

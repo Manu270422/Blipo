@@ -1,0 +1,108 @@
+<!doctype html>
+<!-- Yo genero los íconos y el gráfico de la Play Store con el mismo código que dibuja a Blipo en el juego. -->
+<!-- Yo lo abro con un servidor local (tools/brand.html) y descargo cada imagen con su botón. -->
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>BLIPO · Generador de marca</title>
+  <style>
+    /* Yo cargo las fuentes locales de la marca. */
+    @font-face { font-family: 'Lilita One'; src: url('../assets/fonts/lilita-one-latin-400-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'Nunito'; font-weight: 900; src: url('../assets/fonts/nunito-latin-900-normal.woff2') format('woff2'); }
+    body { margin: 0; padding: 24px; background: #0f0b20; color: #F4EEDF; font-family: Nunito, sans-serif; display: grid; gap: 24px; }
+    figure { margin: 0; display: grid; gap: 8px; justify-items: start; }
+    canvas { max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 8px 24px #0008; }
+    a { color: #FFC23D; font-weight: 900; }
+  </style>
+</head>
+<body>
+  <h1>BLIPO · Marca</h1>
+  <div id="out"></div>
+  <script type="module">
+    // Yo reutilizo el dibujo oficial del personaje.
+    import { drawPlayer, getSkin } from '../js/entities/Skins.js';
+
+    // Yo defino la paleta de la marca.
+    const C = { ink: '#1A1433', ink2: '#241C47', stone: '#4A3E8C', teal: '#2DE1C2', lava: '#FF5D4A', gold: '#FFC23D', bone: '#F4EEDF' };
+    const blipo = getSkin('blipo');
+    const out = document.getElementById('out');
+
+    // Yo dibujo un bloque de piedra con bisel, igual que los tiles del juego.
+    function stone(c, x, y, s) {
+      c.fillStyle = C.stone; c.fillRect(x, y, s, s);
+      c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(x, y, s, s * 0.14); c.fillRect(x, y, s * 0.14, s);
+      c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(x, y + s * 0.86, s, s * 0.14); c.fillRect(x + s * 0.86, y, s * 0.14, s);
+    }
+
+    // Yo pinto el fondo con degradado y una rejilla sutil.
+    function backdrop(c, w, h) {
+      const g = c.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, '#2A2060'); g.addColorStop(1, C.ink);
+      c.fillStyle = g; c.fillRect(0, 0, w, h);
+      // Yo agrego un halo turquesa detrás del personaje.
+      const r = c.createRadialGradient(w / 2, h * 0.5, 0, w / 2, h * 0.5, Math.max(w, h) * 0.5);
+      r.addColorStop(0, 'rgba(45,225,194,.28)'); r.addColorStop(1, 'rgba(45,225,194,0)');
+      c.fillStyle = r; c.fillRect(0, 0, w, h);
+    }
+
+    // Yo dibujo a Blipo centrado de pie sobre una línea base.
+    function hero(c, cx, by, size) {
+      drawPlayer(c, blipo, { vx: 0, vy: 0, facing: 1, sqX: 1, sqY: 1, onGround: true, blinkSeed: 1.7 }, cx, by, size, 0.2);
+    }
+
+    // Yo creo un canvas, lo dibujo y agrego su enlace de descarga.
+    function make(name, w, h, paint) {
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h; cv.dataset.name = name;
+      paint(cv.getContext('2d'), w, h);
+      const fig = document.createElement('figure');
+      const a = document.createElement('a');
+      a.textContent = `Descargar ${name}`; a.download = name; a.href = cv.toDataURL('image/png');
+      fig.append(cv, a); out.appendChild(fig);
+    }
+
+    // Yo espero a que carguen las fuentes antes de escribir textos.
+    await document.fonts.load('100px "Lilita One"');
+    await document.fonts.load('900 40px Nunito');
+
+    // Yo dibujo el ícono estándar: piso de piedra y Blipo grande.
+    const icon = (c, w, h, pad = 0) => {
+      backdrop(c, w, h);
+      const s = w / 8;
+      for (let i = 0; i < 8; i++) stone(c, i * s, h - s * 1.35, s);
+      hero(c, w / 2, h - s * 1.35, w * (0.62 - pad));
+    };
+    make('icon-512.png', 512, 512, (c, w, h) => icon(c, w, h));
+    make('icon-192.png', 192, 192, (c, w, h) => icon(c, w, h));
+    // Yo dejo el personaje dentro de la zona segura del 80% para íconos adaptables de Android.
+    make('maskable-512.png', 512, 512, (c, w, h) => {
+      backdrop(c, w, h);
+      const s = w / 10;
+      for (let i = 0; i < 10; i++) stone(c, i * s, h * 0.7, s);
+      hero(c, w / 2, h * 0.7, w * 0.42);
+    });
+
+    // Yo dibujo el gráfico destacado de Google Play (1024x500).
+    make('feature-graphic.png', 1024, 500, (c, w, h) => {
+      backdrop(c, w, h);
+      const s = 40;
+      // Yo armo un escenario: suelo, plataformas y pinchos.
+      for (let x = 0; x < w; x += s) stone(c, x, h - s, s);
+      [[80, 330, 4], [760, 250, 5], [600, 380, 2]].forEach(([x, y, n]) => { for (let i = 0; i < n; i++) stone(c, x + i * s, y, s); });
+      c.fillStyle = C.lava;
+      for (let x = 320; x < 560; x += 20) { c.beginPath(); c.moveTo(x, h - s); c.lineTo(x + 10, h - s - 18); c.lineTo(x + 20, h - s); c.fill(); }
+      // Yo pongo a Blipo saltando y una gema.
+      hero(c, 200, 330, 150);
+      c.fillStyle = C.gold; c.beginPath(); c.moveTo(860, 170); c.lineTo(880, 200); c.lineTo(860, 230); c.lineTo(840, 200); c.fill();
+      // Yo escribo el logo con sombra de piedra.
+      c.textAlign = 'center';
+      c.font = '150px "Lilita One"';
+      c.fillStyle = C.stone; c.fillText('BLIPO', 560, 205);
+      c.fillStyle = C.bone; c.fillText('BLIPO', 560, 195);
+      c.font = '900 34px Nunito';
+      c.fillStyle = C.teal; c.fillText('Un ojo. Dos saltos. Cero excusas.', 560, 255);
+    });
+    document.body.dataset.ready = '1';
+  </script>
+</body>
+</html>

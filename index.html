@@ -1,0 +1,312 @@
+<!doctype html>
+<!-- Yo defino el documento base de BLIPO; el idioma se ajusta desde JS. -->
+<html lang="es">
+<head>
+  <!-- Yo declaro la codificación. -->
+  <meta charset="utf-8" />
+  <!-- Yo ajusto el viewport para móviles con notch y bloqueo el zoom accidental al jugar. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <!-- Yo pongo el título y la descripción para buscadores y la tienda web. -->
+  <title>BLIPO — Un ojo. Dos saltos. Cero excusas.</title>
+  <meta name="description" content="BLIPO es un plataformas de precisión: salta, desliza por paredes, esquiva pinchos y vuelve cada día por el reto diario." />
+  <!-- Yo pinto la barra del sistema con el color tinta de la marca. -->
+  <meta name="theme-color" content="#1A1433" />
+  <!-- Yo habilito el modo app en iOS. -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <!-- Yo enlazo el manifest para instalar como app (PWA / TWA para Play Store). -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <!-- Yo declaro los íconos. -->
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
+  <!-- Yo precargo la fuente del logo para evitar saltos visuales. -->
+  <link rel="preload" href="assets/fonts/lilita-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <!-- Yo cargo los estilos separados por responsabilidad. -->
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/screens.css" />
+  <link rel="stylesheet" href="css/game.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body>
+  <!-- Yo defino los íconos una sola vez como símbolos SVG reutilizables. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15.5 4 7.5 12l8 8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="m8.5 4 8 8-8 8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M4 3.5V8h4.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm9 5-.1-3-2.3-.6a7 7 0 0 0-.8-1.8l1.2-2-2.1-2.1-2 1.2a7 7 0 0 0-1.8-.8L12.5 3h-3l-.6 2.3a7 7 0 0 0-1.8.8l-2-1.2L3 7l1.2 2a7 7 0 0 0-.8 1.8L1.1 11.5v3l2.3.6c.2.6.5 1.2.8 1.8l-1.2 2L5.1 21l2-1.2c.6.3 1.2.6 1.8.8l.6 2.3h3l.6-2.3c.6-.2 1.2-.5 1.8-.8l2 1.2 2.1-2.1-1.2-2c.3-.6.6-1.2.8-1.8z"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 3h10v3h3.5v2A4.5 4.5 0 0 1 16.3 12.5 5 5 0 0 1 13 15v3h3v3H8v-3h3v-3a5 5 0 0 1-3.3-2.5A4.5 4.5 0 0 1 3.5 8V6H7zm0 5V8H5.5a2.5 2.5 0 0 0 1.6 2.3A7 7 0 0 1 7 8zm10 0a7 7 0 0 1-.1 2.3A2.5 2.5 0 0 0 18.5 8z"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M8 7V6a4 4 0 0 1 8 0v1h3l1 14H4L5 7zm2 0h4V6a2 2 0 0 0-4 0z"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><rect x="3" y="12" width="4.5" height="9" rx="1"/><rect x="9.75" y="6" width="4.5" height="15" rx="1"/><rect x="16.5" y="3" width="4.5" height="18" rx="1"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M7 2v2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-3V2h-2v2H9V2zM5 9h14v10H5z"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 2s6 5.2 6 11a6 6 0 0 1-12 0c0-2.7 1.4-4.6 2.6-5.8-.1 2.2.9 3.8 2.4 3.8 0-4 1-6.5 1-9z"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21s-8.5-5.3-8.5-11.2A4.8 4.8 0 0 1 12 6.6a4.8 4.8 0 0 1 8.5 3.2C20.5 15.7 12 21 12 21z"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2.5 2.9 6 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.2 1.3-6.6-4.9-4.6 6.6-.8z"/></symbol>
+    <symbol id="i-gem" viewBox="0 0 24 24"><path d="M12 2 20 12 12 22 4 12z"/></symbol>
+    <symbol id="i-skull" viewBox="0 0 24 24"><path d="M12 2a9 9 0 0 0-9 9c0 3 1.5 5.2 3.5 6.5V21h3v-2h1v2h3v-2h1v2h3v-3.5c2-1.3 3.5-3.5 3.5-6.5a9 9 0 0 0-9-9zm-3.5 8a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm7 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 5v4.6l3.4 2-1 1.7L11 12.7V7z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3h1.5a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1zm2.5 0h5V7a2.5 2.5 0 0 0-5 0z"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 2.5 7 7.5l1.8 1.8 1.9-1.9V15h2.6V7.4l1.9 1.9L17 7.5zM4 13v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7h-2.5v5.5h-11V13z"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 1.5c.6 5.3 3.2 7.9 8.5 8.5-5.3.6-7.9 3.2-8.5 8.5-.6-5.3-3.2-7.9-8.5-8.5 5.3-.6 7.9-3.2 8.5-8.5z"/><circle cx="19" cy="19" r="2.5"/></symbol>
+    <symbol id="i-infinity" viewBox="0 0 24 24"><path d="M6.5 8a4 4 0 1 0 0 8c3.5 0 7.5-8 11-8a4 4 0 1 1 0 8c-3.5 0-7.5-8-11-8z" fill="none" stroke="currentColor" stroke-width="2.6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m4.5 12.5 5 5 10-11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M15 4.5 7.5 12l7.5 7.5z"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M4.5 16 12 7.5l7.5 8.5z"/></symbol>
+  </svg>
+
+  <!-- Yo monto la aplicación completa en un contenedor raíz. -->
+  <div id="app" class="app">
+
+    <!-- Yo dejo el canvas del juego al fondo; solo se ve en la pantalla de juego. -->
+    <canvas id="game-canvas" class="game-canvas" aria-label="Juego BLIPO" role="img"></canvas>
+
+    <!-- ===================== SPLASH ===================== -->
+    <!-- Yo muestro la portada: necesita un toque para desbloquear el audio del navegador. -->
+    <section class="screen screen--splash is-active" data-screen="splash" aria-labelledby="splash-title">
+      <div class="splash">
+        <canvas class="mascot mascot--xl" data-mascot aria-hidden="true"></canvas>
+        <h1 id="splash-title" class="logo">BLIPO</h1>
+        <p class="tagline" data-i18n="tagline">Un ojo. Dos saltos. Cero excusas.</p>
+        <button class="btn btn--gold btn--xl" data-action="start" type="button">
+          <svg class="icon"><use href="#i-play"/></svg><span data-i18n="tap_to_play">Tocar para jugar</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ===================== MENÚ PRINCIPAL ===================== -->
+    <section class="screen screen--menu" data-screen="menu" aria-labelledby="menu-title">
+      <header class="topbar">
+        <div class="wallet" aria-live="polite"><svg class="icon"><use href="#i-spark"/></svg><span data-bind="sparks">0</span></div>
+        <div class="topbar__right">
+          <button class="icon-btn" data-nav="settings" type="button" data-i18n-aria="settings"><svg class="icon"><use href="#i-gear"/></svg></button>
+        </div>
+      </header>
+      <div class="menu">
+        <div class="menu__brand">
+          <canvas class="mascot mascot--lg" data-mascot aria-hidden="true"></canvas>
+          <h1 id="menu-title" class="logo logo--menu">BLIPO</h1>
+          <p class="tagline" data-i18n="tagline">Un ojo. Dos saltos. Cero excusas.</p>
+        </div>
+        <div class="menu__actions">
+          <button class="btn btn--gold btn--xl btn--block" data-action="continue" type="button">
+            <svg class="icon"><use href="#i-play"/></svg>
+            <span class="btn__stack"><span data-i18n="play">Jugar</span><small data-bind="continue-label"></small></span>
+          </button>
+          <button class="mode-card mode-card--daily" data-action="daily" type="button">
+            <svg class="icon mode-card__icon"><use href="#i-calendar"/></svg>
+            <span class="mode-card__body">
+              <strong data-i18n="daily_title">Reto diario</strong>
+              <small data-bind="daily-sub"></small>
+            </span>
+            <span class="streak" data-bind="streak-badge"><svg class="icon"><use href="#i-flame"/></svg><b data-bind="streak">0</b></span>
+          </button>
+          <button class="mode-card mode-card--survival" data-action="survival" type="button">
+            <svg class="icon mode-card__icon"><use href="#i-infinity"/></svg>
+            <span class="mode-card__body">
+              <strong data-i18n="survival_title">Supervivencia</strong>
+              <small data-bind="survival-sub"></small>
+            </span>
+          </button>
+          <nav class="menu__grid" aria-label="Secciones">
+            <button class="tile-btn" data-nav="worlds" type="button"><svg class="icon"><use href="#i-star"/></svg><span data-i18n="levels">Niveles</span></button>
+            <button class="tile-btn" data-nav="shop" type="button"><svg class="icon"><use href="#i-bag"/></svg><span data-i18n="shop">Tienda</span></button>
+            <button class="tile-btn" data-nav="achievements" type="button"><svg class="icon"><use href="#i-trophy"/></svg><span data-i18n="achievements">Logros</span><i class="dot" data-bind="ach-dot" hidden></i></button>
+            <button class="tile-btn" data-nav="stats" type="button"><svg class="icon"><use href="#i-chart"/></svg><span data-i18n="stats">Estadísticas</span></button>
+          </nav>
+        </div>
+      </div>
+      <button class="install-btn" data-action="install" type="button" hidden><span data-i18n="install">Instalar app</span></button>
+    </section>
+
+    <!-- ===================== MUNDOS Y NIVELES ===================== -->
+    <section class="screen screen--worlds" data-screen="worlds" aria-labelledby="worlds-title">
+      <header class="topbar">
+        <button class="icon-btn" data-back type="button" data-i18n-aria="back"><svg class="icon"><use href="#i-back"/></svg></button>
+        <h2 id="worlds-title" class="topbar__title" data-i18n="levels">Niveles</h2>
+        <div class="wallet wallet--stars"><svg class="icon"><use href="#i-star"/></svg><span data-bind="stars-total">0</span></div>
+      </header>
+      <div class="worlds">
+        <div class="world-tabs" role="tablist" data-list="world-tabs"></div>
+        <div class="world-panel">
+          <div class="world-head" data-bind="world-head"></div>
+          <div class="level-grid" data-list="levels"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TIENDA ===================== -->
+    <section class="screen screen--shop" data-screen="shop" aria-labelledby="shop-title">
+      <header class="topbar">
+        <button class="icon-btn" data-back type="button" data-i18n-aria="back"><svg class="icon"><use href="#i-back"/></svg></button>
+        <h2 id="shop-title" class="topbar__title" data-i18n="shop">Tienda</h2>
+        <div class="wallet"><svg class="icon"><use href="#i-spark"/></svg><span data-bind="sparks">0</span></div>
+      </header>
+      <div class="scroll">
+        <p class="hint" data-i18n="shop_hint">Gana chispas con estrellas, gemas, logros y el reto diario.</p>
+        <div class="skin-grid" data-list="skins"></div>
+      </div>
+    </section>
+
+    <!-- ===================== LOGROS ===================== -->
+    <section class="screen screen--achievements" data-screen="achievements" aria-labelledby="ach-title">
+      <header class="topbar">
+        <button class="icon-btn" data-back type="button" data-i18n-aria="back"><svg class="icon"><use href="#i-back"/></svg></button>
+        <h2 id="ach-title" class="topbar__title" data-i18n="achievements">Logros</h2>
+        <div class="wallet wallet--muted"><svg class="icon"><use href="#i-trophy"/></svg><span data-bind="ach-count">0</span></div>
+      </header>
+      <div class="scroll"><ul class="ach-list" data-list="achievements"></ul></div>
+    </section>
+
+    <!-- ===================== ESTADÍSTICAS ===================== -->
+    <section class="screen screen--stats" data-screen="stats" aria-labelledby="stats-title">
+      <header class="topbar">
+        <button class="icon-btn" data-back type="button" data-i18n-aria="back"><svg class="icon"><use href="#i-back"/></svg></button>
+        <h2 id="stats-title" class="topbar__title" data-i18n="stats">Estadísticas</h2>
+        <span></span>
+      </header>
+      <div class="scroll"><dl class="stat-grid" data-list="stats"></dl></div>
+    </section>
+
+    <!-- ===================== AJUSTES ===================== -->
+    <section class="screen screen--settings" data-screen="settings" aria-labelledby="settings-title">
+      <header class="topbar">
+        <button class="icon-btn" data-back type="button" data-i18n-aria="back"><svg class="icon"><use href="#i-back"/></svg></button>
+        <h2 id="settings-title" class="topbar__title" data-i18n="settings">Ajustes</h2>
+        <span></span>
+      </header>
+      <div class="scroll">
+        <form class="settings" data-form="settings" onsubmit="return false">
+          <fieldset class="group">
+            <legend data-i18n="set_audio">Sonido</legend>
+            <label class="row"><span data-i18n="set_music">Música</span><input type="range" min="0" max="1" step="0.05" name="music" /></label>
+            <label class="row"><span data-i18n="set_sfx">Efectos</span><input type="range" min="0" max="1" step="0.05" name="sfx" /></label>
+            <label class="row"><span data-i18n="set_vibration">Vibración</span><input type="checkbox" class="switch" name="vibration" /></label>
+          </fieldset>
+          <fieldset class="group">
+            <legend data-i18n="set_controls">Controles</legend>
+            <label class="row"><span data-i18n="set_touch">Botones táctiles</span>
+              <select name="touch"><option value="auto" data-i18n="opt_auto">Automático</option><option value="on" data-i18n="opt_on">Siempre</option><option value="off" data-i18n="opt_off">Nunca</option></select>
+            </label>
+            <label class="row"><span data-i18n="set_swap">Salto a la izquierda</span><input type="checkbox" class="switch" name="touchSwap" /></label>
+            <label class="row"><span data-i18n="set_touch_size">Tamaño de botones</span><input type="range" min="0.75" max="1.4" step="0.05" name="touchSize" /></label>
+            <label class="row"><span data-i18n="set_touch_opacity">Opacidad de botones</span><input type="range" min="0.25" max="1" step="0.05" name="touchOpacity" /></label>
+            <p class="keys" data-i18n="keys_help">Teclado: ← → o A D para moverte, ↑ W Espacio para saltar, R reinicia, Esc pausa. También funciona con mando.</p>
+          </fieldset>
+          <fieldset class="group">
+            <legend data-i18n="set_display">Pantalla</legend>
+            <label class="row"><span data-i18n="set_timer">Mostrar cronómetro</span><input type="checkbox" class="switch" name="showTimer" /></label>
+            <label class="row"><span data-i18n="set_shake">Sacudida de cámara</span><input type="checkbox" class="switch" name="shake" /></label>
+            <label class="row"><span data-i18n="set_reduced">Reducir efectos</span><input type="checkbox" class="switch" name="reducedMotion" /></label>
+            <label class="row"><span data-i18n="set_contrast">Alto contraste</span><input type="checkbox" class="switch" name="highContrast" /></label>
+            <label class="row"><span data-i18n="set_lang">Idioma</span>
+              <select name="lang"><option value="es">Español</option><option value="en">English</option></select>
+            </label>
+          </fieldset>
+          <fieldset class="group">
+            <legend data-i18n="set_data">Datos</legend>
+            <div class="row row--actions">
+              <button class="btn btn--small" data-action="tutorial" type="button" data-i18n="replay_tutorial">Ver tutorial</button>
+              <button class="btn btn--small btn--danger" data-action="reset" type="button" data-i18n="reset_progress">Borrar progreso</button>
+            </div>
+          </fieldset>
+          <p class="credits"><span data-i18n="credits">Creado por Carlos Manuel Turizo Hernández · El Mundo de Manu</span><br /><span class="version">v1.0.0</span></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===================== JUEGO ===================== -->
+    <section class="screen screen--game" data-screen="game" aria-label="Partida">
+      <!-- Yo muestro el HUD encima del canvas. -->
+      <div class="hud" data-hud>
+        <div class="hud__left">
+          <button class="icon-btn icon-btn--hud" data-action="pause" type="button" data-i18n-aria="pause"><svg class="icon"><use href="#i-pause"/></svg></button>
+          <span class="hud__level" data-bind="hud-level"></span>
+        </div>
+        <div class="hud__center" data-bind="hud-center"></div>
+        <div class="hud__right">
+          <span class="hud__stat" title="Muertes"><svg class="icon"><use href="#i-skull"/></svg><b data-bind="hud-deaths">0</b></span>
+          <span class="hud__stat" data-bind="hud-timer-wrap"><svg class="icon"><use href="#i-clock"/></svg><b data-bind="hud-time">00:00.0</b></span>
+        </div>
+      </div>
+      <!-- Yo dibujo los controles táctiles (multitouch con Pointer Events). -->
+      <div class="touch" data-touch aria-hidden="true">
+        <div class="touch__move">
+          <button class="touch__btn" data-touch-action="left" type="button" tabindex="-1"><svg class="icon"><use href="#i-arrow"/></svg></button>
+          <button class="touch__btn touch__btn--flip" data-touch-action="right" type="button" tabindex="-1"><svg class="icon"><use href="#i-arrow"/></svg></button>
+        </div>
+        <div class="touch__jump">
+          <button class="touch__btn touch__btn--jump" data-touch-action="jump" type="button" tabindex="-1"><svg class="icon"><use href="#i-up"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== OVERLAYS ===================== -->
+    <!-- Yo defino la pausa. -->
+    <div class="overlay" data-overlay="pause" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+      <div class="panel">
+        <h2 id="pause-title" class="panel__title" data-i18n="paused">Pausa</h2>
+        <p class="panel__sub" data-bind="pause-sub"></p>
+        <div class="panel__actions">
+          <button class="btn btn--gold btn--block" data-action="resume" type="button"><svg class="icon"><use href="#i-play"/></svg><span data-i18n="resume">Continuar</span></button>
+          <button class="btn btn--block" data-action="restart" type="button"><svg class="icon"><use href="#i-restart"/></svg><span data-i18n="restart">Reiniciar</span></button>
+          <button class="btn btn--block" data-action="settings-from-pause" type="button"><svg class="icon"><use href="#i-gear"/></svg><span data-i18n="settings">Ajustes</span></button>
+          <button class="btn btn--block btn--ghost" data-action="quit" type="button"><svg class="icon"><use href="#i-home"/></svg><span data-i18n="quit">Salir al menú</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Yo defino el resultado (nivel, reto diario o supervivencia). -->
+    <div class="overlay" data-overlay="result" role="dialog" aria-modal="true" aria-labelledby="result-title">
+      <div class="panel panel--result">
+        <h2 id="result-title" class="panel__title" data-bind="result-title"></h2>
+        <div class="stars-row" data-bind="result-stars"></div>
+        <dl class="result-stats" data-bind="result-stats"></dl>
+        <div class="reward" data-bind="result-reward"></div>
+        <div class="panel__actions panel__actions--row" data-bind="result-actions"></div>
+      </div>
+    </div>
+
+    <!-- Yo defino el diálogo de confirmación genérico. -->
+    <div class="overlay" data-overlay="confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+      <div class="panel panel--small">
+        <h2 id="confirm-title" class="panel__title" data-bind="confirm-title"></h2>
+        <p class="panel__sub" data-bind="confirm-text"></p>
+        <div class="panel__actions panel__actions--row">
+          <button class="btn btn--ghost" data-confirm="no" type="button" data-i18n="cancel">Cancelar</button>
+          <button class="btn btn--danger" data-confirm="yes" type="button" data-i18n="confirm">Confirmar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Yo defino el tutorial en pasos. -->
+    <div class="overlay" data-overlay="tutorial" role="dialog" aria-modal="true" aria-labelledby="tut-title">
+      <div class="panel panel--tutorial">
+        <h2 id="tut-title" class="panel__title" data-bind="tut-title"></h2>
+        <p class="panel__sub" data-bind="tut-text"></p>
+        <div class="tut-dots" data-bind="tut-dots"></div>
+        <div class="panel__actions panel__actions--row">
+          <button class="btn btn--ghost" data-action="tut-skip" type="button" data-i18n="skip">Saltar</button>
+          <button class="btn btn--gold" data-action="tut-next" type="button"><span data-i18n="next">Siguiente</span><svg class="icon"><use href="#i-next"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Yo aviso en pantallas verticales pequeñas que el juego se disfruta más en horizontal. -->
+    <div class="rotate-hint" data-rotate-hint hidden>
+      <span data-i18n="rotate">Gira tu teléfono para ver el nivel completo</span>
+      <button class="icon-btn" data-action="dismiss-rotate" type="button" aria-label="OK"><svg class="icon"><use href="#i-check"/></svg></button>
+    </div>
+
+    <!-- Yo reservo el contenedor de notificaciones. -->
+    <div class="toasts" data-toasts aria-live="polite"></div>
+  </div>
+
+  <!-- Yo cargo el punto de entrada como módulo ES. -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+/* Yo defino los componentes reutilizables de la interfaz. */
+
+/* ---------- App y pantallas ---------- */
+/* Yo uso el contenedor raíz a pantalla completa (dvh cubre las barras dinámicas de móvil). */
+.app { position: fixed; inset: 0; height: 100dvh; overflow: hidden; }
+
+/* Yo apilo las pantallas y muestro solo la activa. */
+.screen {
+  position: absolute; inset: 0;
+  display: none; flex-direction: column;
+  padding: calc(var(--safe-t) + var(--sp-3)) calc(var(--safe-r) + var(--sp-4)) calc(var(--safe-b) + var(--sp-3)) calc(var(--safe-l) + var(--sp-4));
+  z-index: 2;
+}
+.screen.is-active { display: flex; animation: screen-in var(--dur) ease-out; }
+@keyframes screen-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* Yo permito scroll vertical dentro de las pantallas con listas. */
+.scroll { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: var(--sp-6); scrollbar-width: thin; }
+.scroll > * { max-width: 61.25rem; margin-inline: auto; }
+
+/* ---------- Barra superior ---------- */
+.topbar { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--sp-3); min-height: 52px; margin-bottom: var(--sp-3); }
+.topbar__title { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: var(--fs-lg); letter-spacing: .01em; }
+.topbar__right { display: flex; gap: var(--sp-2); justify-self: end; grid-column: 3; }
+
+/* ---------- Monedero ---------- */
+.wallet {
+  display: inline-flex; align-items: center; gap: .4em;
+  padding: .35em .8em; border-radius: var(--r-pill);
+  background: rgba(0,0,0,.28); color: var(--gold);
+  font-family: var(--font-display); font-size: var(--fs-md);
+  box-shadow: inset 0 0 0 2px rgba(255,194,61,.25);
+  justify-self: end;
+}
+.wallet--stars { color: var(--gold); }
+.wallet--muted { color: var(--bone); box-shadow: inset 0 0 0 2px var(--line); }
+.wallet.bump { animation: bump .4s ease-out; }
+@keyframes bump { 40% { transform: scale(1.18); } }
+
+/* ---------- Botón de piedra ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .55em;
+  min-height: 48px; padding: .6em 1.2em;
+  border-radius: var(--r-md);
+  background: var(--stone); color: var(--bone);
+  font-weight: 900; font-size: var(--fs-md); letter-spacing: .01em;
+  box-shadow: var(--bevel);
+  transition: transform .08s, box-shadow .08s, background var(--dur), filter var(--dur);
+}
+.btn:hover { background: var(--stone-hi); }
+.btn:active, .btn.is-pressed { transform: translateY(4px); box-shadow: var(--bevel-pressed); }
+.btn:disabled { filter: grayscale(.8) brightness(.7); cursor: not-allowed; }
+/* Yo destaco la acción principal con Oro Chispa. */
+.btn--gold { background: var(--gold); color: var(--ink); }
+.btn--gold:hover { background: #FFD066; }
+.btn--danger { background: var(--coral); color: #fff; }
+.btn--danger:hover { background: #FF7666; }
+.btn--ghost { background: transparent; box-shadow: inset 0 0 0 2px var(--line); }
+.btn--ghost:hover { background: rgba(255,255,255,.06); }
+.btn--ghost:active { transform: translateY(2px); box-shadow: inset 0 0 0 2px var(--line); }
+.btn--xl { min-height: 64px; font-size: var(--fs-lg); padding: .7em 1.6em; border-radius: var(--r-lg); }
+.btn--small { min-height: 40px; font-size: var(--fs-sm); padding: .45em 1em; }
+.btn--block { width: 100%; }
+.btn__stack { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
+.btn__stack small { font-size: var(--fs-xs); font-weight: 800; opacity: .75; }
+
+/* ---------- Botón de ícono ---------- */
+.icon-btn {
+  display: inline-grid; place-items: center;
+  width: 48px; height: 48px; border-radius: var(--r-sm);
+  background: var(--stone); color: var(--bone);
+  box-shadow: var(--bevel); transition: transform .08s, box-shadow .08s;
+}
+.icon-btn:active { transform: translateY(4px); box-shadow: var(--bevel-pressed); }
+.icon-btn .icon { width: 24px; height: 24px; }
+
+/* ---------- Paneles y overlays ---------- */
+.overlay {
+  position: absolute; inset: 0; z-index: 20;
+  display: none; place-items: center;
+  padding: calc(var(--safe-t) + 1rem) calc(var(--safe-r) + 1rem) calc(var(--safe-b) + 1rem) calc(var(--safe-l) + 1rem);
+  background: rgba(10, 7, 26, .72);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.overlay.is-open { display: grid; animation: fade var(--dur) ease-out; }
+.overlay.is-open .panel { animation: pop .3s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes fade { from { opacity: 0; } }
+@keyframes pop { from { transform: scale(.9); opacity: 0; } }
+
+.panel {
+  width: min(440px, 100%); max-height: 100%; overflow-y: auto;
+  padding: var(--sp-5); border-radius: var(--r-lg);
+  background: var(--ink-2);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.06), 0 24px 60px rgba(0,0,0,.5);
+  text-align: center;
+}
+.panel--small { width: min(380px, 100%); }
+.panel__title { margin: 0 0 var(--sp-2); font-family: var(--font-display); font-weight: 400; font-size: var(--fs-xl); line-height: 1.05; }
+.panel__sub { margin: 0 0 var(--sp-4); color: var(--muted); }
+.panel__actions { display: grid; gap: var(--sp-3); margin-top: var(--sp-4); }
+.panel__actions--row { grid-auto-flow: column; grid-auto-columns: 1fr; }
+
+/* ---------- Estrellas ---------- */
+.stars { display: inline-flex; gap: 2px; color: rgba(255,255,255,.18); }
+.stars .icon { width: 1em; height: 1em; }
+.stars .on { color: var(--gold); }
+
+/* ---------- Notificaciones ---------- */
+.toasts {
+  position: absolute; z-index: 40; left: 50%; transform: translateX(-50%);
+  top: calc(var(--safe-t) + 64px);
+  display: grid; gap: var(--sp-2); justify-items: center; pointer-events: none; width: max-content; max-width: 92vw;
+}
+.toast {
+  display: flex; align-items: center; gap: .6em;
+  padding: .6em 1.1em; border-radius: var(--r-pill);
+  background: rgba(20, 15, 42, .92); color: var(--bone);
+  box-shadow: inset 0 0 0 2px var(--line), 0 8px 24px rgba(0,0,0,.4);
+  font-weight: 800; font-size: var(--fs-sm);
+  animation: toast-in .3s ease-out, toast-out .3s ease-in forwards 2.4s;
+}
+.toast .icon { color: var(--gold); }
+.toast--achievement { box-shadow: inset 0 0 0 2px var(--gold), 0 8px 24px rgba(0,0,0,.4); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(-10px); } }
+@keyframes toast-out { to { opacity: 0; transform: translateY(-10px); } }
+
+/* ---------- Formularios (ajustes) ---------- */
+.switch {
+  appearance: none; -webkit-appearance: none;
+  width: 52px; height: 30px; border-radius: var(--r-pill);
+  background: rgba(0,0,0,.35); box-shadow: inset 0 0 0 2px var(--line);
+  position: relative; cursor: pointer; transition: background var(--dur); flex-shrink: 0;
+}
+.switch::after {
+  content: ''; position: absolute; top: 4px; left: 4px; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--bone); transition: transform var(--dur);
+}
+.switch:checked { background: var(--teal); }
+.switch:checked::after { transform: translateX(22px); background: var(--ink); }
+
+input[type='range'] { -webkit-appearance: none; appearance: none; width: min(220px, 50%); height: 30px; background: transparent; cursor: pointer; }
+input[type='range']::-webkit-slider-runnable-track { height: 8px; border-radius: 8px; background: rgba(0,0,0,.4); }
+input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; margin-top: -8px; border-radius: 50%; background: var(--gold); box-shadow: 0 3px 0 rgba(0,0,0,.35); }
+input[type='range']::-moz-range-track { height: 8px; border-radius: 8px; background: rgba(0,0,0,.4); }
+input[type='range']::-moz-range-thumb { width: 24px; height: 24px; border: 0; border-radius: 50%; background: var(--gold); }
+
+select {
+  min-height: 40px; padding: 0 2.2em 0 .9em; border-radius: var(--r-sm); border: 0;
+  background: var(--stone) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%23F4EEDF' stroke-width='3'/%3E%3C/svg%3E") no-repeat right .6em center / 1em;
+  appearance: none; -webkit-appearance: none; font-weight: 800; cursor: pointer;
+}
+option { background: var(--ink-2); }

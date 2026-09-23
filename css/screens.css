@@ -1,0 +1,147 @@
+/* Yo doy estilo a cada pantalla del juego. */
+
+/* ---------- Logo ---------- */
+/* Yo construyo el logo como bloques de piedra apilados con sombras duras (eco de los tiles). */
+.logo {
+  margin: 0; font-family: var(--font-display); font-weight: 400;
+  font-size: var(--fs-logo); line-height: .9; letter-spacing: .02em; color: var(--bone);
+  text-shadow: 0 .04em 0 #C9BFA8, 0 .08em 0 var(--stone), 0 .12em 0 #2C2360, 0 .2em .3em rgba(0,0,0,.45);
+}
+.logo--menu { font-size: clamp(2.8rem, 1.6rem + 6vw, 6.5rem); }
+.tagline { margin: .9em 0 0; color: var(--muted); font-weight: 800; font-size: var(--fs-md); }
+
+/* Yo dimensiono la mascota animada en canvas. */
+.mascot { display: block; margin-inline: auto; }
+.mascot--xl { width: clamp(96px, 22vmin, 180px); height: clamp(96px, 22vmin, 180px); }
+.mascot--lg { width: clamp(72px, 16vmin, 140px); height: clamp(72px, 16vmin, 140px); }
+
+/* ---------- Splash ---------- */
+.screen--splash { justify-content: center; align-items: center; }
+.splash { display: grid; justify-items: center; text-align: center; gap: var(--sp-2); }
+.splash .btn { margin-top: var(--sp-5); }
+
+/* ---------- Menú ---------- */
+.menu {
+  flex: 1; display: grid; align-items: center; gap: var(--sp-5);
+  grid-template-columns: 1fr minmax(300px, 440px);
+  max-width: 68.75rem; width: 100%; margin-inline: auto; min-height: 0;
+}
+.menu__brand { text-align: center; }
+.menu__actions { display: grid; gap: var(--sp-3); }
+
+/* Yo diseño las tarjetas de modo como losas de piedra con acento de color. */
+.mode-card {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--sp-3);
+  width: 100%; min-height: 64px; padding: .7em 1em; border-radius: var(--r-md);
+  background: var(--ink-3); text-align: left; box-shadow: var(--bevel);
+  transition: transform .08s, box-shadow .08s, background var(--dur);
+}
+.mode-card:hover { background: #382D6E; }
+.mode-card:active { transform: translateY(4px); box-shadow: var(--bevel-pressed); }
+.mode-card__icon { width: 34px; height: 34px; padding: 6px; border-radius: var(--r-sm); background: rgba(0,0,0,.25); }
+.mode-card--daily .mode-card__icon { color: var(--coral); }
+.mode-card--survival .mode-card__icon { color: var(--teal); }
+.mode-card__body { display: grid; line-height: 1.2; }
+.mode-card__body strong { font-weight: 900; font-size: var(--fs-md); }
+.mode-card__body small { color: var(--muted); font-size: var(--fs-xs); font-weight: 800; }
+.mode-card.is-done { box-shadow: var(--bevel), inset 0 0 0 2px rgba(45,225,194,.45); }
+
+/* Yo muestro la racha como una llama con número. */
+.streak { display: inline-flex; align-items: center; gap: .15em; padding: .25em .6em; border-radius: var(--r-pill); background: rgba(255,93,74,.16); color: var(--coral); font-family: var(--font-display); }
+.streak.is-cold { background: rgba(255,255,255,.06); color: var(--muted); }
+
+.menu__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-2); }
+.tile-btn {
+  position: relative; display: grid; justify-items: center; gap: .25em;
+  padding: .7em .3em; border-radius: var(--r-md);
+  background: var(--stone); box-shadow: var(--bevel);
+  font-size: var(--fs-xs); font-weight: 900; transition: transform .08s, box-shadow .08s, background var(--dur);
+}
+.tile-btn:hover { background: var(--stone-hi); }
+.tile-btn:active { transform: translateY(4px); box-shadow: var(--bevel-pressed); }
+.tile-btn .icon { width: 26px; height: 26px; }
+.tile-btn .dot { position: absolute; top: 8px; right: 10px; width: 10px; height: 10px; border-radius: 50%; background: var(--coral); }
+
+.install-btn { position: absolute; bottom: calc(var(--safe-b) + 10px); left: 50%; transform: translateX(-50%); padding: .4em 1em; border-radius: var(--r-pill); background: rgba(0,0,0,.3); color: var(--muted); font-size: var(--fs-xs); font-weight: 800; }
+
+/* ---------- Mundos ---------- */
+.worlds { flex: 1; display: grid; grid-template-rows: auto 1fr; gap: var(--sp-3); min-height: 0; max-width: 68.75rem; width: 100%; margin-inline: auto; }
+.world-tabs { display: flex; gap: var(--sp-2); overflow-x: auto; padding: 4px 2px 10px; scrollbar-width: none; }
+.world-tabs::-webkit-scrollbar { display: none; }
+.world-tab {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: .5em;
+  padding: .5em 1em; border-radius: var(--r-pill); background: var(--ink-3);
+  font-weight: 900; font-size: var(--fs-sm); box-shadow: inset 0 0 0 2px transparent;
+}
+.world-tab i { width: 12px; height: 12px; border-radius: 4px; background: var(--c); }
+.world-tab[aria-selected='true'] { background: var(--c); color: var(--ink); }
+.world-tab[aria-selected='true'] i { background: var(--ink); }
+.world-tab.is-locked { opacity: .55; }
+
+.world-panel { overflow-y: auto; min-height: 0; padding-bottom: var(--sp-5); }
+.world-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); margin-bottom: var(--sp-3); flex-wrap: wrap; }
+.world-head h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: var(--fs-xl); color: var(--c); }
+.world-head p { margin: 0; color: var(--muted); font-weight: 800; }
+.world-lock { display: grid; justify-items: center; gap: var(--sp-2); padding: var(--sp-6) var(--sp-4); border-radius: var(--r-lg); background: var(--ink-2); text-align: center; color: var(--muted); }
+.world-lock .icon { width: 42px; height: 42px; color: var(--bone); }
+
+/* Yo pinto cada nivel como un bloque de piedra del color del mundo. */
+.level-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: var(--sp-3); }
+.level-cell {
+  aspect-ratio: 1; display: grid; place-items: center; align-content: center; gap: .2em;
+  border-radius: var(--r-md); background: var(--c); color: var(--ink);
+  box-shadow: var(--bevel); transition: transform .08s, box-shadow .08s, filter var(--dur);
+}
+.level-cell b { font-family: var(--font-display); font-weight: 400; font-size: var(--fs-xl); line-height: 1; }
+.level-cell .stars { font-size: .95rem; color: rgba(0,0,0,.25); }
+.level-cell .stars .on { color: var(--ink); }
+.level-cell:hover { filter: brightness(1.08); }
+.level-cell:active { transform: translateY(4px); box-shadow: var(--bevel-pressed); }
+.level-cell.is-locked { background: var(--ink-3); color: var(--muted); cursor: not-allowed; }
+.level-cell.is-next { outline: 3px solid var(--gold); outline-offset: 3px; animation: next-glow 1.6s ease-in-out infinite; }
+@keyframes next-glow { 50% { outline-color: rgba(255,194,61,.35); } }
+
+/* ---------- Tienda ---------- */
+.hint { color: var(--muted); text-align: center; margin: 0 auto var(--sp-4); font-size: var(--fs-sm); }
+.skin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--sp-3); }
+.skin-card {
+  display: grid; justify-items: center; gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-3); border-radius: var(--r-lg); background: var(--ink-2);
+  box-shadow: inset 0 0 0 2px var(--line);
+}
+.skin-card.is-equipped { box-shadow: inset 0 0 0 3px var(--teal); }
+.skin-card canvas { width: 88px; height: 88px; }
+.skin-card h4 { margin: 0; font-weight: 900; font-size: var(--fs-md); }
+.skin-card .btn { width: 100%; }
+
+/* ---------- Logros ---------- */
+.ach-list { list-style: none; margin: 0 auto; padding: 0; display: grid; gap: var(--sp-2); }
+.ach {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); background: var(--ink-2);
+}
+.ach__icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--r-sm); background: rgba(0,0,0,.3); color: var(--muted); }
+.ach.is-done .ach__icon { background: var(--gold); color: var(--ink); }
+.ach h4 { margin: 0; font-weight: 900; font-size: var(--fs-sm); }
+.ach p { margin: 0; color: var(--muted); font-size: var(--fs-xs); }
+.ach__bar { height: 6px; margin-top: 6px; border-radius: 6px; background: rgba(0,0,0,.35); overflow: hidden; }
+.ach__bar i { display: block; height: 100%; background: var(--teal); border-radius: inherit; }
+.ach__reward { font-family: var(--font-display); color: var(--gold); white-space: nowrap; }
+.ach.is-done .ach__reward { color: var(--teal); }
+
+/* ---------- Estadísticas ---------- */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--sp-3); margin: 0 auto; }
+.stat { padding: var(--sp-4); border-radius: var(--r-md); background: var(--ink-2); }
+.stat dt { color: var(--muted); font-size: var(--fs-xs); font-weight: 800; }
+.stat dd { margin: .2em 0 0; font-family: var(--font-display); font-size: var(--fs-xl); line-height: 1.1; }
+
+/* ---------- Ajustes ---------- */
+.settings { display: grid; gap: var(--sp-4); max-width: 40rem !important; }
+.group { margin: 0; padding: var(--sp-3) var(--sp-4) var(--sp-4); border: 0; border-radius: var(--r-lg); background: var(--ink-2); }
+.group legend { float: left; clear: both; width: 100%; padding: var(--sp-2) 0; font-family: var(--font-display); font-size: var(--fs-lg); }
+.row { clear: both; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4); min-height: 52px; border-top: 1px solid var(--line); font-weight: 800; }
+.row--actions { justify-content: flex-start; flex-wrap: wrap; gap: var(--sp-2); padding-top: var(--sp-3); }
+.keys { margin: var(--sp-3) 0 0; color: var(--muted); font-size: var(--fs-xs); }
+.credits { text-align: center; color: var(--muted); font-size: var(--fs-xs); }
+.version { opacity: .6; }
+.group > :not(legend) { clear: both; }

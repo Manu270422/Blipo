@@ -1,0 +1,12 @@
+<!-- Yo dibujo el favicon: Blipo, el cíclope gota, sobre fondo tinta. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#1A1433"/>
+  <circle cx="19" cy="17" r="6" fill="#1FB89E"/>
+  <circle cx="45" cy="17" r="6" fill="#1FB89E"/>
+  <path d="M32 12c12 0 19 9 19 21 0 12-8 19-19 19S13 45 13 33c0-12 7-21 19-21z" fill="#2DE1C2"/>
+  <circle cx="24" cy="52" r="5" fill="#1FB89E"/>
+  <circle cx="40" cy="52" r="5" fill="#1FB89E"/>
+  <circle cx="32" cy="31" r="11" fill="#fff"/>
+  <circle cx="32" cy="31" r="8" fill="#141026"/>
+  <circle cx="35" cy="28" r="2.6" fill="#CFFBF3"/>
+</svg>

@@ -1,0 +1,10 @@
+{
+  "appId": "com.elmundodemanu.blipo",
+  "appName": "BLIPO",
+  "webDir": "www",
+  "backgroundColor": "#1A1433",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#1A1433"
+  }
+}

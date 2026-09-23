@@ -1,0 +1,49 @@
+/* Yo normalizo el navegador y defino la base del documento. */
+
+/* Yo uso box-sizing coherente en todo. */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Yo ocupo toda la pantalla y evito el rebote de scroll en móviles. */
+html, body { height: 100%; margin: 0; overscroll-behavior: none; }
+
+body {
+  /* Yo aplico el fondo tinta con una trama de bloques casi invisible (eco de los tiles). */
+  background-color: var(--ink);
+  background-image:
+    linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+  background-size: 48px 48px;
+  color: var(--bone);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--fs-md);
+  line-height: 1.45;
+  /* Yo evito selecciones y menús contextuales molestos al jugar con el dedo. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  overflow: hidden;
+  text-rendering: optimizeLegibility;
+}
+
+/* Yo hago que los controles hereden la tipografía. */
+button, input, select { font: inherit; color: inherit; }
+
+/* Yo quito estilos por defecto de botones. */
+button { cursor: pointer; border: 0; background: none; padding: 0; touch-action: manipulation; }
+
+/* Yo dejo un foco visible y de marca para teclado y mando. */
+:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
+
+/* Yo oculto de verdad lo que tiene "hidden". */
+[hidden] { display: none !important; }
+
+/* Yo dimensiono los íconos SVG. */
+.icon { width: 1.2em; height: 1.2em; fill: currentColor; flex-shrink: 0; }
+
+/* Yo respeto la preferencia de movimiento reducido del sistema. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+:root.reduced-motion *, :root.reduced-motion *::before { animation: none !important; transition: none !important; }

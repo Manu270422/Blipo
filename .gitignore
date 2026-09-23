@@ -1,0 +1,7 @@
+# Yo ignoro dependencias, builds y archivos del sistema.
+node_modules/
+www/
+android/app/build/
+.DS_Store
+*.keystore
+*.jks

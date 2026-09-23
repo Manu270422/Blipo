@@ -1,0 +1,60 @@
+/* Yo defino los tokens de diseño de BLIPO: colores, tipografía, espacios y sombras. */
+
+/* Yo registro las fuentes locales para que el juego funcione 100% offline en la Play Store. */
+@font-face { font-family: 'Lilita One'; src: url('../assets/fonts/lilita-one-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Nunito'; src: url('../assets/fonts/nunito-latin-600-normal.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Nunito'; src: url('../assets/fonts/nunito-latin-800-normal.woff2') format('woff2'); font-weight: 800; font-display: swap; }
+@font-face { font-family: 'Nunito'; src: url('../assets/fonts/nunito-latin-900-normal.woff2') format('woff2'); font-weight: 900; font-display: swap; }
+
+:root {
+  /* Yo defino la paleta de la marca. */
+  --ink: #1A1433;          /* Yo uso "Tinta Nocturna" como fondo base. */
+  --ink-2: #231B45;        /* Yo uso un segundo nivel para superficies. */
+  --ink-3: #2F2560;        /* Yo uso un tercer nivel para tarjetas elevadas. */
+  --stone: #4A3E8C;        /* Yo uso "Piedra Violeta" para botones secundarios. */
+  --stone-hi: #5C4FA6;     /* Yo aclaro la piedra al pasar el cursor. */
+  --bone: #F4EEDF;         /* Yo uso "Hueso" para textos y pinchos. */
+  --teal: #2DE1C2;         /* Yo uso "Turquesa Blipo" para el protagonista y lo positivo. */
+  --coral: #FF5D4A;        /* Yo uso "Coral Lava" para el peligro y acciones destructivas. */
+  --gold: #FFC23D;         /* Yo uso "Oro Chispa" para recompensas y la acción principal. */
+  --muted: rgba(244, 238, 223, .62); /* Yo atenúo textos secundarios. */
+  --line: rgba(244, 238, 223, .12);  /* Yo uso líneas finas para separar. */
+
+  /* Yo defino las familias tipográficas. */
+  --font-display: 'Lilita One', 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif;
+  --font-body: 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Yo defino una escala tipográfica fluida (se adapta de móvil a TV). */
+  --fs-xs: clamp(.72rem, .68rem + .2vw, .85rem);
+  --fs-sm: clamp(.85rem, .8rem + .25vw, 1rem);
+  --fs-md: clamp(1rem, .92rem + .35vw, 1.2rem);
+  --fs-lg: clamp(1.25rem, 1.05rem + .8vw, 1.75rem);
+  --fs-xl: clamp(1.8rem, 1.3rem + 2vw, 3rem);
+  --fs-logo: clamp(3.2rem, 2rem + 7vw, 8rem);
+
+  /* Yo defino espacios consistentes. */
+  --sp-1: .25rem; --sp-2: .5rem; --sp-3: .75rem; --sp-4: 1rem; --sp-5: 1.5rem; --sp-6: 2rem;
+
+  /* Yo defino radios según jerarquía: botones más redondos que paneles. */
+  --r-sm: 10px; --r-md: 16px; --r-lg: 22px; --r-pill: 999px;
+
+  /* Yo defino el bisel de piedra: la firma visual heredada de los tiles del prototipo. */
+  --bevel: inset 0 3px 0 rgba(255, 255, 255, .2), inset 0 -5px 0 rgba(0, 0, 0, .32), 0 5px 0 rgba(0, 0, 0, .35);
+  --bevel-pressed: inset 0 2px 0 rgba(255, 255, 255, .12), inset 0 -2px 0 rgba(0, 0, 0, .3), 0 1px 0 rgba(0, 0, 0, .35);
+
+  /* Yo leo las zonas seguras del notch y la barra de gestos. */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+
+  /* Yo controlo el tamaño y opacidad de los botones táctiles desde JS. */
+  --touch-scale: 1;
+  --touch-opacity: .8;
+
+  /* Yo defino la duración base de animaciones. */
+  --dur: .22s;
+}
+
+/* Yo subo el contraste cuando el jugador lo pide. */
+:root.high-contrast { --muted: rgba(255, 255, 255, .9); --line: rgba(255, 255, 255, .35); --stone: #5B4DB0; }
