@@ -105,6 +105,15 @@ export class Game {
     // Yo reviso si cayó fuera del mapa o tocó un peligro.
     if (p.crushed || p.y > this.map.rows + 1 || this.map.hitsHazard(p.hurtBox())) { this.die(); return; }
 
+    // Yo enciendo los cristales que Blipo toca: iluminan la cueva para siempre en este intento.
+    for (const c of this.map.crystals) {
+      if (!c.lit && (c.x + 0.5 - p.cx) ** 2 + (c.y + 0.5 - p.cy) ** 2 < 1.2) {
+        c.lit = true;
+        this.burst(c.x + 0.5, c.y + 0.5, '#B9FFF4', 18, 4);
+        this.audio.sfx('chime');
+      }
+    }
+
     // Yo hago crujir y romperse los carámbanos con sonido y esquirlas.
     for (const c of this.map.icicles) {
       if (c.cracked) this.audio.sfx('crack');
@@ -195,10 +204,10 @@ export class Game {
         for (const t of data) {
           const ch = this.map.get(t.x, t.y);
           // Yo lanzo al jugador si pisa un resorte.
-          if (ch === T.BOUNCE) {
-            p.launch(PHYS.BOUNCE_VEL);
+          if (ch === T.BOUNCE || ch === T.MUSHROOM) {
+            p.launch(ch === T.MUSHROOM ? PHYS.MUSHROOM_VEL : PHYS.BOUNCE_VEL);
             this.map.bounceAt.get(t.y * this.map.cols + t.x).t = 1;
-            this.audio.sfx('bounce');
+            this.audio.sfx(ch === T.MUSHROOM ? 'mushroom' : 'bounce');
             this.haptics.pulse(20);
             bus.emit('stat', { key: 'bounces' });
             break;

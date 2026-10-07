@@ -127,6 +127,10 @@ export class AudioManager {
         break;
       case 'portal': this.tone({ type: 'sine', f0: 180, f1: 1400, dur: 0.32, vol: 0.14 }); break;
       case 'bounce': this.tone({ type: 'sine', f0: 160, f1: 780, dur: 0.18, vol: 0.2 }); break;
+      case 'mushroom': this.tone({ type: 'sine', f0: 220, f1: 620, dur: 0.16, vol: 0.18 }); break;
+      case 'chime':
+        [1318, 1760, 2637].forEach((f, i) => this.tone({ type: 'sine', f0: f, dur: 0.3, vol: 0.08, delay: i * 0.05 }));
+        break;
       case 'crack': this.tone({ type: 'square', f0: 1800, f1: 900, dur: 0.06, vol: 0.05 }); break;
       case 'shatter':
         this.burst({ dur: 0.18, vol: 0.12, freq: 4200, type: 'highpass' });

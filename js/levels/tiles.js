@@ -24,10 +24,13 @@ export const T = Object.freeze({
   JET_B: 'f',        // Yo marco una boquilla de llamarada (fase B, alterna con la A).
   ICE: 'I',          // Yo marco un bloque de hielo resbaloso.
   ICICLE: 'Y',       // Yo marco un carámbano que cuelga y cae cuando Blipo pasa debajo.
+  WEB: 'W',          // Yo marco una telaraña: frena la caída y se escala tocando saltar.
+  MUSHROOM: 'M',     // Yo marco un hongo saltarín (rebota más bajo que el resorte).
+  CRYSTAL: 'L',      // Yo marco un cristal que ilumina la cueva cuando Blipo lo toca.
 });
 
 // Yo defino qué tiles bloquean el paso siempre.
-export const SOLID = new Set([T.GROUND, T.FILL, T.BOUNCE, T.BELT_LEFT, T.BELT_RIGHT, T.JET_A, T.JET_B, T.ICE]);
+export const SOLID = new Set([T.GROUND, T.FILL, T.BOUNCE, T.BELT_LEFT, T.BELT_RIGHT, T.JET_A, T.JET_B, T.ICE, T.MUSHROOM]);
 
 // Yo defino hacia dónde arrastra cada cinta (-1 izquierda, 1 derecha).
 export const BELT_DIR = { [T.BELT_LEFT]: -1, [T.BELT_RIGHT]: 1 };

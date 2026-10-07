@@ -23,6 +23,7 @@ export class TileMap {
     this.belts = [];
     this.jets = [];
     this.icicles = [];
+    this.crystals = [];
     // Yo creo las zonas de viento descritas en el nivel ({ x, y, w, h, dir, force, period, on, phase }).
     this.winds = (def.winds || []).map((w) => ({ force: WIND.FORCE, period: 0, on: 0, phase: 0, ...w, state: 'on' }));
     // Yo creo las plataformas móviles descritas en el nivel.
@@ -48,7 +49,8 @@ export class TileMap {
           case T.PORTAL_OUT: this.portalOut = { x, y }; break;
           case T.EXIT: this.exits.push({ x, y }); break;
           case T.CRUMBLE: this.crumbles.push({ x, y, state: 'solid', t: 0 }); break;
-          case T.BOUNCE: this.bounces.push({ x, y, t: 0 }); break;
+          case T.BOUNCE: case T.MUSHROOM: this.bounces.push({ x, y, t: 0, mushroom: c === T.MUSHROOM }); break;
+          case T.CRYSTAL: this.crystals.push({ x, y, lit: false }); this.grid[y][x] = T.EMPTY; break;
           case T.SAW: this.saws.push({ x, y }); break;
           case T.BELT_LEFT: case T.BELT_RIGHT: this.belts.push({ x, y, dir: BELT_DIR[c] }); break;
           case T.JET_A: case T.JET_B: this.jets.push({ x, y, ch: c }); break;
@@ -67,6 +69,14 @@ export class TileMap {
       j.reach = Math.min(JET.HEIGHT, reach);
       j.phase = jetPhase(j.ch, 0);
     }
+  }
+
+  // Yo indico si una caja toca alguna telaraña.
+  inWeb(box) {
+    for (let y = Math.floor(box.y); y <= Math.floor(box.y + box.h); y++) {
+      for (let x = Math.floor(box.x); x <= Math.floor(box.x + box.w); x++) if (this.get(x, y) === T.WEB) return true;
+    }
+    return false;
   }
 
   // Yo indico si una celda es hielo resbaloso.

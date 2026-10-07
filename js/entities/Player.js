@@ -35,6 +35,7 @@ export class Player {
     this.carryX = 0;
     this.windX = 0;
     this.onIce = false;
+    this.inWeb = false;
     this.crushed = false;
   }
 
@@ -83,7 +84,8 @@ export class Player {
 
     // ---- Movimiento horizontal ----
     if (this.lockX <= 0) {
-      const target = dir * PHYS.MOVE_SPEED;
+      // Yo avanzo despacio dentro de la telaraña.
+      const target = dir * (this.inWeb ? PHYS.WEB_SPEED : PHYS.MOVE_SPEED);
       // Yo elijo aceleración o fricción según haya input y dónde esté.
       // Yo patino sobre el hielo: acelero y freno mucho menos.
       const ground = this.onIce ? [PHYS.ICE_ACCEL, PHYS.ICE_FRICTION] : [PHYS.ACCEL_GROUND, PHYS.FRICTION_GROUND];
@@ -130,6 +132,13 @@ export class Player {
 
     // ---- Gravedad ----
     this.vy += PHYS.GRAVITY * dt;
+    // Yo quedo atrapado en la telaraña: caigo lento, subo a toques y recupero el doble salto.
+    this.inWeb = map.inWeb(this);
+    if (this.inWeb) {
+      this.vy = Math.max(-PHYS.WEB_RISE, Math.min(this.vy, PHYS.WEB_FALL));
+      this.vx = Math.max(-PHYS.WEB_SPEED, Math.min(this.vx, PHYS.WEB_SPEED));
+      this.airJumps = 1;
+    }
     // Yo subo con las corrientes de aire hasta su velocidad máxima.
     if (wind.y) { this.vy += wind.y * dt; this.vy = Math.max(this.vy, -WIND.LIFT_MAX); if (this.vy < 0) this.cut = true; }
     // Yo limito la caída al deslizar por la pared y recargo el doble salto (como el prototipo).
