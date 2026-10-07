@@ -1,6 +1,7 @@
 // Yo organizo la campaña en mundos y resuelvo cualquier nivel (campaña, diario o supervivencia).
 import { CAMPAIGN } from './campaign.js';
 import { FOUNDRY } from './foundry.js';
+import { GLACIER } from './glacier.js';
 import { generateLevel } from './generator.js';
 import { hashString } from '../core/Random.js';
 
@@ -10,7 +11,7 @@ export const WORLDS = [
   { id: 0, key: 'w_quarry', hue: 205, style: 'quarry', music: 'w0', unlock: 0, count: CAMPAIGN.length, source: 'hand', levels: CAMPAIGN },
   { id: 1, key: 'w_caves', hue: 150, style: 'caves', music: 'w1', unlock: 10, count: 10, source: 'gen', diff: [0.08, 0.35] },
   { id: 2, key: 'w_foundry', hue: 18, style: 'foundry', music: 'w2', unlock: 35, count: FOUNDRY.length, source: 'hand', levels: FOUNDRY },
-  { id: 3, key: 'w_glacier', hue: 190, style: 'glacier', music: 'w3', unlock: 65, count: 10, source: 'gen', diff: [0.5, 0.8] },
+  { id: 3, key: 'w_glacier', hue: 190, style: 'glacier', music: 'w3', unlock: 65, count: GLACIER.length, source: 'hand', levels: GLACIER },
   { id: 4, key: 'w_void', hue: 280, style: 'void', music: 'w4', unlock: 95, count: 10, source: 'gen', diff: [0.72, 1] },
 ];
 

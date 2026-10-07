@@ -9,7 +9,7 @@
 [![Jugar ahora](https://img.shields.io/badge/▶_JUGAR_AHORA-blipo.elmundodemanu.com-2DE1C2?style=for-the-badge&labelColor=1A1433)](https://blipo.elmundodemanu.com)
 
 <a href="https://blipo.elmundodemanu.com">
-  <img src="https://readme-typing-svg.demolab.com?font=Lilita+One&size=22&duration=2600&pause=900&color=2DE1C2&center=true&vCenter=true&width=560&lines=Plataformas+de+precisión.+Saltos+instantáneos.;48+niveles+en+5+mundos.;Reto+diario%2C+racha+de+fuego+%F0%9F%94%A5+y+supervivencia.;Sin+frameworks.+HTML+%2B+CSS+%2B+JavaScript+puro." alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Lilita+One&size=22&duration=2600&pause=900&color=2DE1C2&center=true&vCenter=true&width=560&lines=Plataformas+de+precisión.+Saltos+instantáneos.;50+niveles+en+5+mundos.;Reto+diario%2C+racha+de+fuego+%F0%9F%94%A5+y+supervivencia.;Sin+frameworks.+HTML+%2B+CSS+%2B+JavaScript+puro." alt="Typing SVG" />
 </a>
 
 [![Licencia](https://img.shields.io/badge/licencia-privada-FF5D4A?style=flat-square)](#-licencia)
@@ -39,7 +39,7 @@ Corre en el navegador, se instala como **PWA**, funciona **offline** y se empaqu
 
 | 🕹️ Precisión | 🌍 5 mundos | 📅 Reto diario | ♾️ Supervivencia | 🎨 9 skins |
 |:---:|:---:|:---:|:---:|:---:|
-| Doble salto | 48 niveles | Racha 🔥 | 5 vidas | Chispas |
+| Doble salto | 50 niveles | Racha 🔥 | 5 vidas | Chispas |
 
 </div>
 
@@ -66,8 +66,9 @@ Corre en el navegador, se instala como **PWA**, funciona **offline** y se empaqu
 <td width="50%" valign="top">
 
 **🧩 Contenido**
-- 48 niveles en 5 mundos: 18 diseñados a mano (Cantera y Fundición) + 30 generados con semilla fija
+- 50 niveles en 5 mundos: 30 diseñados a mano (Cantera, Fundición y Glaciar) + 20 generados con semilla fija
 - Fundición con mecánicas propias: cintas transportadoras, llamaradas con ritmo y plataformas móviles
+- Glaciar con mecánicas propias: hielo resbaloso, carámbanos que caen, viento lateral, ráfagas y corrientes que elevan
 - Mapas de tamaño libre (anchos y altos) con cámara que sigue a Blipo y fondos con paralaje por mundo
 - Reto diario: mismo nivel para todos, racha 🔥, premio creciente y botón para compartir
 - Supervivencia: salas infinitas cada vez más difíciles, 5 vidas
@@ -135,7 +136,7 @@ npm run cap:open    # abre el proyecto en Android Studio
 | 🪨 Cantera | Azul piedra | 0 |
 | 🌿 Cavernas | Verde musgo | 10 |
 | 🔥 Fundición | Naranja óxido · cintas, llamaradas y plataformas móviles | 35 |
-| ❄️ Glaciar | Celeste hielo | 65 |
+| ❄️ Glaciar | Celeste hielo · hielo resbaloso, carámbanos y viento | 65 |
 | 🌌 Vacío | Violeta | 95 |
 
 ---

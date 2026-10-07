@@ -112,6 +112,24 @@ export default {
   hint_movers: 'Súbete a las plataformas móviles: te llevan consigo.',
   hint_rhythm: 'Las llamas se turnan. Sigue el ritmo y avanza.',
 
+  // Yo defino los nombres de los niveles del Glaciar.
+  l_ice: 'Pista de hielo',
+  l_slide: 'Tobogán',
+  l_icicles: 'Carámbanos',
+  l_frost: 'Escarcha',
+  l_wind: 'Ventisca',
+  l_gusts: 'Ráfagas',
+  l_crevasse: 'La grieta',
+  l_avalanche: 'Avalancha',
+  l_summit: 'La cumbre',
+  l_blizzard: 'Tormenta de nieve',
+  l_cavern: 'Cueva de hielo',
+  l_peak: 'Pico helado',
+  hint_ice: 'El hielo resbala: frena antes del borde pulsando hacia atrás.',
+  hint_icicles: 'Los carámbanos tiemblan y caen cuando pasas debajo. ¡No te detengas!',
+  hint_wind: 'El viento te empuja y las corrientes te elevan. Déjate llevar.',
+  hint_gusts: 'Las ráfagas van y vienen: los copos avisan antes de soplar.',
+
   // Yo defino los nombres de las skins.
   skin_blipo: 'Blipo',
   skin_flama: 'Flama',

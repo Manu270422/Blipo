@@ -112,6 +112,24 @@ export default {
   hint_movers: 'Hop on moving platforms: they carry you along.',
   hint_rhythm: 'The flames take turns. Follow the beat and go.',
 
+  // Yo defino los nombres de los niveles del Glaciar.
+  l_ice: 'Ice rink',
+  l_slide: 'The slide',
+  l_icicles: 'Icicles',
+  l_frost: 'Frost',
+  l_wind: 'Gale',
+  l_gusts: 'Gusts',
+  l_crevasse: 'The crevasse',
+  l_avalanche: 'Avalanche',
+  l_summit: 'The summit',
+  l_blizzard: 'Blizzard',
+  l_cavern: 'Ice cave',
+  l_peak: 'Frozen peak',
+  hint_ice: 'Ice is slippery: brake before the edge by pressing back.',
+  hint_icicles: 'Icicles shake and fall when you pass below. Keep moving!',
+  hint_wind: 'Wind pushes you and updrafts lift you. Ride it.',
+  hint_gusts: 'Gusts come and go: snowflakes warn you before they blow.',
+
   // Yo defino los nombres de las skins.
   skin_blipo: 'Blipo',
   skin_flama: 'Flame',
