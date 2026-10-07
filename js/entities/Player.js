@@ -1,6 +1,6 @@
 // Yo controlo a Blipo: movimiento, saltos, deslizamiento en paredes y animación.
 import { PHYS } from '../config.js';
-import { moveAndCollide } from '../engine/Physics.js';
+import { moveAndCollide, landOnMovers } from '../engine/Physics.js';
 
 export class Player {
   // Yo creo al jugador en una posición de tiles.
@@ -29,6 +29,10 @@ export class Player {
     this.sqX = 1; this.sqY = 1;
     this.alive = true;
     this.lastCol = null;
+    // Yo reinicio el arrastre de cintas y plataformas móviles.
+    this.riding = null;
+    this.carryX = 0;
+    this.crushed = false;
   }
 
   // Yo devuelvo el centro en tiles.
@@ -51,6 +55,23 @@ export class Player {
     // Yo descuento timers.
     this.coyote = this.onGround ? PHYS.COYOTE_TIME : Math.max(0, this.coyote - dt);
     this.lockX = Math.max(0, this.lockX - dt);
+
+    // ---- Superficie ----
+    // Yo calculo el arrastre de lo que piso: una plataforma móvil me lleva consigo y una cinta me empuja.
+    let carry = 0;
+    if (this.riding) {
+      carry = this.riding.vx;
+      this.y += this.riding.my;
+      // Yo detecto si la plataforma me aplasta contra el techo.
+      const hy = Math.floor(this.y + 0.05);
+      if (map.isSolid(Math.floor(this.x + 0.05), hy) || map.isSolid(Math.floor(this.x + this.w - 0.05), hy)) this.crushed = true;
+    } else if (this.onGround && this.lastCol) {
+      for (const t of this.lastCol.groundTiles) {
+        const d = map.beltDir(t.x, t.y);
+        if (d) { carry = d * PHYS.BELT_SPEED; break; }
+      }
+    }
+    this.carryX = carry;
 
     // ---- Movimiento horizontal ----
     if (this.lockX <= 0) {
@@ -106,9 +127,14 @@ export class Player {
     // ---- Colisión ----
     const impact = this.vy;
     const wasGround = this.onGround;
+    const prevBottom = this.y + this.h;
     const col = moveAndCollide(this, map, dt);
     this.lastCol = col;
-    this.onGround = col.onGround;
+    // Yo reviso si caí (o sigo parado) sobre una plataforma móvil.
+    this.riding = col.onGround ? null : landOnMovers(this, map.movers, prevBottom);
+    this.onGround = col.onGround || !!this.riding;
+    // Yo convierto el arrastre en impulso propio al despegar, así el salto conserva la inercia.
+    if (!this.onGround && this.carryX) { this.vx += this.carryX; this.carryX = 0; }
     if (this.onGround) this.airJumps = 1;
     // Yo reporto el aterrizaje con su fuerza.
     if (this.onGround && !wasGround) {

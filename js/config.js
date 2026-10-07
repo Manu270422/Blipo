@@ -1,6 +1,7 @@
 // Yo centralizo aquí todas las constantes del juego para ajustarlas sin tocar la lógica.
 
 // Yo defino el tamaño de la grilla de cada nivel (heredado del prototipo original: 40 x 22).
+// Yo uso esta grilla como tamaño estándar y como referencia de zoom: los mapas grandes se desplazan.
 export const GRID = Object.freeze({ COLS: 40, ROWS: 22 });
 
 // Yo defino la física en unidades de "tile por segundo" para que no dependa de la pantalla.
@@ -20,6 +21,7 @@ export const PHYS = Object.freeze({
   WALL_JUMP_VY: 14.8,     // Yo empujo verticalmente al saltar desde la pared.
   WALL_JUMP_LOCK: 0.14,   // Yo bloqueo el input horizontal un instante tras el wall jump.
   BOUNCE_VEL: 24,         // Yo lanzo al jugador con el resorte (~7 tiles).
+  BELT_SPEED: 4.5,        // Yo arrastro al jugador sobre las cintas transportadoras.
   COYOTE_TIME: 0.1,       // Yo permito saltar unos milisegundos después de dejar el borde.
   JUMP_BUFFER: 0.12,      // Yo recuerdo el salto pulsado justo antes de aterrizar.
   PLAYER_W: 0.72,         // Yo defino el ancho de la caja de colisión del jugador.

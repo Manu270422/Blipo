@@ -1,6 +1,10 @@
 // Yo dibujo el mundo en canvas: capa estática precalculada + objetos animados + jugador + partículas.
 import { T } from '../levels/tiles.js';
 import { drawPlayer, resolveColor } from '../entities/Skins.js';
+import { Backdrop } from './Backdrop.js';
+
+// Yo limito el tamaño de la capa estática para no pasar el máximo de canvas de los móviles.
+const MAX_STATIC_PIXELS = 12e6;
 
 // Yo defino los colores fijos de la marca que se usan dentro del juego.
 const BRAND = {
@@ -45,17 +49,17 @@ export class Renderer {
   }
 
   // Yo pinto una vez la geometría fija del nivel en un canvas aparte.
-  buildStatic(map, theme, tile) {
-    const s = tile * this.dpr;
+  buildStatic(map, theme, tile, level = {}) {
+    let s = tile * this.dpr;
+    // Yo bajo la resolución de la capa si el mapa es enorme (el navegador la escala al dibujarla).
+    if (map.cols * map.rows * s * s > MAX_STATIC_PIXELS) s = Math.sqrt(MAX_STATIC_PIXELS / (map.cols * map.rows));
     this.static.width = Math.ceil(map.cols * s);
     this.static.height = Math.ceil(map.rows * s);
     const c = this.sctx;
-    // Yo pinto el fondo del "tablero" como el degradado del prototipo.
-    const bg = c.createLinearGradient(0, 0, 0, this.static.height);
-    bg.addColorStop(0, theme.bgTop);
-    bg.addColorStop(1, theme.bgBottom);
-    c.fillStyle = bg;
-    c.fillRect(0, 0, this.static.width, this.static.height);
+    // Yo dejo la capa transparente: el degradado y el fondo vivo se pintan debajo en cada cuadro.
+    c.clearRect(0, 0, this.static.width, this.static.height);
+    // Yo preparo el fondo con paralaje del mundo.
+    if (!this.backdrop || this.backdrop.map !== map) { this.backdrop = new Backdrop(level, map.cols, map.rows); this.backdrop.map = map; }
     // Yo agrego una trama de puntos muy sutil para dar profundidad.
     c.fillStyle = 'rgba(255,255,255,.035)';
     for (let y = 0; y < map.rows; y++) for (let x = 0; x < map.cols; x++) if ((x + y) % 2 === 0) c.fillRect(x * s + s / 2 - 1, y * s + s / 2 - 1, 2, 2);
@@ -70,6 +74,7 @@ export class Renderer {
         else if (ch === T.SPIKE_RIGHT) this.drawSpike(c, px, py, s, 1, theme);
         else if (ch === T.SPIKE_DOWN) this.drawSpike(c, px, py, s, 2, theme);
         else if (ch === T.SPIKE_LEFT) this.drawSpike(c, px, py, s, 3, theme);
+        else if (ch === T.JET_A || ch === T.JET_B) this.drawNozzle(c, px, py, s, theme);
       }
     }
   }
@@ -85,6 +90,17 @@ export class Renderer {
     side([x, y, x + b, y + b, x + b, y + s - b, x, y + s], 'rgba(0,0,0,.12)');
     side([x + s, y, x + s, y + s, x + s - b, y + s - b, x + s - b, y + b], 'rgba(0,0,0,.36)');
     side([x, y + s, x + b, y + s - b, x + s - b, y + s - b, x + s, y + s], 'rgba(0,0,0,.5)');
+  }
+
+  // Yo dibujo la boquilla metálica de una llamarada.
+  drawNozzle(c, x, y, s, theme) {
+    this.drawStone(c, x, y, s, theme);
+    c.fillStyle = '#3A3F52';
+    c.fillRect(x + s * 0.18, y, s * 0.64, s * 0.42);
+    c.fillStyle = '#1A1433';
+    c.fillRect(x + s * 0.3, y, s * 0.4, s * 0.16);
+    c.fillStyle = BRAND.coral;
+    c.fillRect(x + s * 0.18, y + s * 0.32, s * 0.64, s * 0.1);
   }
 
   // Yo dibujo un pincho con rotación (0 arriba, 1 derecha, 2 abajo, 3 izquierda).
@@ -119,6 +135,19 @@ export class Renderer {
     const X0 = cam.sx(0), Y0 = cam.sy(0);
     ctx.fillStyle = 'rgba(0,0,0,.45)';
     ctx.fillRect(X0 + 4, Y0 + 14, cam.worldW, cam.worldH);
+    // Yo pinto el fondo del tablero (degradado del prototipo) y encima el fondo vivo recortado al nivel.
+    const theme = game.theme;
+    const bg = ctx.createLinearGradient(0, Y0, 0, Y0 + cam.worldH);
+    bg.addColorStop(0, theme.bgTop);
+    bg.addColorStop(1, theme.bgBottom);
+    ctx.fillStyle = bg;
+    ctx.fillRect(X0, Y0, cam.worldW, cam.worldH);
+    if (this.backdrop) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(X0, Y0, cam.worldW, cam.worldH); ctx.clip();
+      this.backdrop.draw(ctx, cam, theme, time, game.particles.scale ?? 1);
+      ctx.restore();
+    }
     // Yo copio la capa estática.
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.static, X0, Y0, cam.worldW, cam.worldH);
@@ -188,6 +217,82 @@ export class Renderer {
       ctx.stroke();
       ctx.fillStyle = BRAND.teal;
       ctx.fillRect(x + tile * 0.12, y - tile * 0.38 - lift, tile * 0.76, tile * 0.16);
+    }
+
+    // Yo dibujo las cintas transportadoras con su banda en movimiento.
+    for (const b of map.belts) {
+      const x = cam.sx(b.x), y = cam.sy(b.y);
+      ctx.fillStyle = '#2A2D3E';
+      ctx.fillRect(x, y, tile, tile);
+      ctx.fillStyle = '#4A4F66';
+      ctx.fillRect(x, y, tile, tile * 0.3);
+      // Yo animo los chevrones en la dirección del arrastre.
+      const o = (((time * 1.8 * b.dir) % 1) + 1) % 1;
+      ctx.strokeStyle = BRAND.gold;
+      ctx.lineWidth = Math.max(1, tile * 0.07);
+      ctx.beginPath();
+      for (let k = -1; k < 2; k++) {
+        const cx = x + (k + o) * tile * 0.5 + tile * 0.25;
+        if (cx < x + tile * 0.08 || cx > x + tile * 0.92) continue;
+        ctx.moveTo(cx - b.dir * tile * 0.08, y + tile * 0.04);
+        ctx.lineTo(cx + b.dir * tile * 0.06, y + tile * 0.15);
+        ctx.lineTo(cx - b.dir * tile * 0.08, y + tile * 0.26);
+      }
+      ctx.stroke();
+      // Yo dibujo los rodillos.
+      ctx.fillStyle = '#7B819C';
+      ctx.beginPath(); ctx.arc(x + tile * 0.5, y + tile * 0.62, tile * 0.2, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#2A2D3E';
+      ctx.beginPath(); const a = time * 6 * b.dir; ctx.moveTo(x + tile * 0.5, y + tile * 0.62); ctx.lineTo(x + tile * 0.5 + Math.cos(a) * tile * 0.2, y + tile * 0.62 + Math.sin(a) * tile * 0.2); ctx.stroke();
+    }
+
+    // Yo dibujo las llamaradas: chispas de aviso y luego la columna de fuego.
+    for (const j of map.jets) {
+      if (j.phase === 'off' || j.reach <= 0) continue;
+      const cx = cam.sx(j.x + 0.5), base = cam.sy(j.y);
+      if (j.phase === 'warn') {
+        ctx.fillStyle = BRAND.gold;
+        for (let i = 0; i < 4; i++) {
+          const k = (time * 5 + i * 0.27 + j.x * 0.13) % 1;
+          ctx.fillRect(cx + Math.sin(i * 7 + time * 20) * tile * 0.18, base - k * tile * 0.7, tile * 0.07, tile * 0.07);
+        }
+        continue;
+      }
+      const h = j.reach * tile;
+      const flick = 1 + Math.sin(time * 40 + j.x) * 0.06;
+      const grad = ctx.createLinearGradient(0, base, 0, base - h);
+      grad.addColorStop(0, '#FFF6E0');
+      grad.addColorStop(0.35, BRAND.gold);
+      grad.addColorStop(0.8, BRAND.coral);
+      grad.addColorStop(1, 'rgba(255,93,74,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(cx - tile * 0.3, base);
+      ctx.quadraticCurveTo(cx - tile * 0.38 * flick, base - h * 0.5, cx, base - h * flick);
+      ctx.quadraticCurveTo(cx + tile * 0.38 * flick, base - h * 0.5, cx + tile * 0.3, base);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // Yo dibujo las plataformas móviles con su riel.
+    for (const m of map.movers) {
+      ctx.strokeStyle = 'rgba(244,238,223,.18)';
+      ctx.lineWidth = Math.max(1, tile * 0.06);
+      ctx.setLineDash([tile * 0.2, tile * 0.2]);
+      ctx.beginPath();
+      ctx.moveTo(cam.sx(m.x0 + m.w / 2), cam.sy(m.y0 + 0.25));
+      ctx.lineTo(cam.sx(m.x0 + m.dx + m.w / 2), cam.sy(m.y0 + m.dy + 0.25));
+      ctx.stroke();
+      ctx.setLineDash([]);
+      const x = cam.sx(m.x), y = cam.sy(m.y), w = m.w * tile, h = m.h * tile;
+      ctx.fillStyle = '#4A4F66';
+      ctx.fillRect(x, y, w, h);
+      ctx.fillStyle = BRAND.gold;
+      ctx.fillRect(x, y, w, Math.max(2, h * 0.28));
+      ctx.fillStyle = 'rgba(0,0,0,.35)';
+      ctx.fillRect(x, y + h * 0.75, w, h * 0.25);
+      // Yo marco franjas de precaución en los extremos.
+      ctx.fillStyle = BRAND.ink;
+      for (let i = 0; i < 2; i++) ctx.fillRect(x + (i ? w - tile * 0.3 : tile * 0.1), y + h * 0.35, tile * 0.2, h * 0.35);
     }
 
     // Yo dibujo las sierras girando.

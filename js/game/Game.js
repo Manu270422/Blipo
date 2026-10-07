@@ -58,7 +58,7 @@ export class Game {
     const r = this.renderer;
     this.camera.resize(r.w, r.h, this.map ? this.map.cols : 40, this.map ? this.map.rows : 22, this.insets);
     if (this.map) {
-      this.renderer.buildStatic(this.map, this.theme, this.camera.tile);
+      this.renderer.buildStatic(this.map, this.theme, this.camera.tile, this.level);
       this.camera.follow(this.player.cx, this.player.cy, 0);
     }
   }
@@ -103,7 +103,12 @@ export class Game {
     p.update(dt, this.input, this.map, (type, data) => this.onPlayerEvent(type, data));
 
     // Yo reviso si cayó fuera del mapa o tocó un peligro.
-    if (p.y > this.map.rows + 1 || this.map.hitsHazard(p.hurtBox())) { this.die(); return; }
+    if (p.crushed || p.y > this.map.rows + 1 || this.map.hitsHazard(p.hurtBox())) { this.die(); return; }
+
+    // Yo hago sonar las llamaradas que se encienden cerca del jugador.
+    for (const j of this.map.jets) {
+      if (j.ignited && Math.abs(j.x + 0.5 - p.cx) < 12 && Math.abs(j.y - p.cy) < 9) { this.audio.sfx('flame'); break; }
+    }
 
     // Yo reviso interacciones con el centro del jugador.
     const cx = p.cx, cy = p.cy;
@@ -263,7 +268,8 @@ export class Game {
 
   // Yo dibujo el frame actual.
   render(dt) {
-    if (this.player) this.camera.follow(this.player.cx, this.player.cy, dt);
+    // Yo adelanto un poco la cámara hacia donde corre Blipo para ver lo que viene.
+    if (this.player) this.camera.follow(this.player.cx + this.player.vx * 0.12, this.player.cy, dt);
     this.renderer.draw(this, dt);
   }
 }
