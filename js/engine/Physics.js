@@ -7,8 +7,8 @@ export function moveAndCollide(body, map, dt) {
   const res = { onGround: false, ceiling: false, wallL: false, wallR: false, groundTiles: [] };
 
   // ---- Eje X ----
-  // Yo aplico el desplazamiento horizontal (sumo el arrastre de cintas o plataformas, si hay).
-  const vx = body.vx + (body.carryX || 0);
+  // Yo aplico el desplazamiento horizontal (sumo el arrastre de cintas, plataformas y viento, si hay).
+  const vx = body.vx + (body.carryX || 0) + (body.windX || 0);
   body.x += vx * dt;
   // Yo calculo las filas que ocupa el cuerpo.
   const ry0 = Math.floor(body.y + EPS), ry1 = Math.floor(body.y + body.h - EPS);

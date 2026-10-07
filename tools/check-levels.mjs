@@ -30,11 +30,13 @@ function cloneMap(m) {
   }
   if (m.movers.length) c.movers = m.movers.map((o) => Object.assign(Object.create(Object.getPrototypeOf(o)), o));
   if (m.jets.length) c.jets = m.jets.map((o) => ({ ...o }));
+  if (m.icicles.length) c.icicles = m.icicles.map((o) => ({ ...o }));
+  if (m.winds.length) c.winds = m.winds.map((o) => ({ ...o }));
   return c;
 }
 
 // Yo copio al jugador campo por campo (mucho más rápido que Object.assign) y reconecto su plataforma.
-const PLAYER_FIELDS = ['w', 'h', 'x', 'y', 'vx', 'vy', 'onGround', 'airJumps', 'coyote', 'buffer', 'lockX', 'cut', 'facing', 'wallDir', 'sliding', 'sqX', 'sqY', 'alive', 'lastCol', 'carryX', 'crushed'];
+const PLAYER_FIELDS = ['w', 'h', 'x', 'y', 'vx', 'vy', 'onGround', 'airJumps', 'coyote', 'buffer', 'lockX', 'cut', 'facing', 'wallDir', 'sliding', 'sqX', 'sqY', 'alive', 'lastCol', 'carryX', 'windX', 'onIce', 'crushed'];
 function clonePlayer(p, oldMap, newMap) {
   const c = Object.create(Player.prototype);
   for (const f of PLAYER_FIELDS) c[f] = p[f];
@@ -92,6 +94,16 @@ function key(n) {
   }
   if (map.jets.some((j) => Math.abs(j.x + 0.5 - p.cx) < 5 && Math.abs(j.y - p.cy) < 5)) k += `,j${Math.round((map.time % 2.4) / 0.1)}`;
   if (map.crumbles.length) k += `,${map.crumbles.map((c) => c.state[0]).join('')}`;
+  // Yo detallo los carámbanos cercanos (estado y altura) y de los lejanos solo si siguen colgando.
+  for (const c of map.icicles) {
+    const near = Math.abs(c.x + 0.5 - p.cx) < 6 && Math.abs(c.y - p.cy) < 12;
+    k += near && c.state !== 'hang' ? `,${c.state[0]}${Math.round(c.fy * 2)}:${Math.round(c.t * 10)}` : `,${c.state === 'hang' ? 'h' : 'x'}`;
+  }
+  // Yo recuerdo el ritmo de las ráfagas cercanas.
+  for (const w of map.winds) {
+    if (!w.period || p.cx < w.x - 6 || p.cx > w.x + w.w + 6 || p.cy < w.y - 6 || p.cy > w.y + w.h + 6) continue;
+    k += `,w${Math.round((((map.time + w.phase) % w.period) / 0.1))}`;
+  }
   return k;
 }
 
@@ -117,6 +129,11 @@ function distanceField(map, targets) {
   // Yo marco dónde se puede pisar (bloques y recorridos de plataformas móviles).
   const support = new Uint8Array(cols * rows);
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) if (blocked(x, y) || map.get(x, y) === T.CRUMBLE) support[y * cols + x] = 1;
+  // Yo trato las corrientes de aire como apoyo: suben a Blipo.
+  for (const w of map.winds) {
+    if (w.dir !== 'up') continue;
+    for (let y = w.y; y < w.y + w.h; y++) for (let x = w.x; x < w.x + w.w; x++) if (x >= 0 && y >= 0 && x < cols && y < rows) support[y * cols + x] = 1;
+  }
   for (const m of map.movers) {
     for (let y = Math.floor(Math.min(m.y0, m.y0 + m.dy)); y <= Math.ceil(Math.max(m.y0, m.y0 + m.dy)); y++) {
       for (let x = Math.floor(Math.min(m.x0, m.x0 + m.dx)); x < Math.ceil(Math.max(m.x0, m.x0 + m.dx) + m.w); x++) if (x >= 0 && y >= 0 && x < cols && y < rows) support[y * cols + x] = 1;

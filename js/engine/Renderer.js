@@ -1,5 +1,5 @@
 // Yo dibujo el mundo en canvas: capa estática precalculada + objetos animados + jugador + partículas.
-import { T } from '../levels/tiles.js';
+import { T, SOLID } from '../levels/tiles.js';
 import { drawPlayer, resolveColor } from '../entities/Skins.js';
 import { Backdrop } from './Backdrop.js';
 
@@ -75,6 +75,7 @@ export class Renderer {
         else if (ch === T.SPIKE_DOWN) this.drawSpike(c, px, py, s, 2, theme);
         else if (ch === T.SPIKE_LEFT) this.drawSpike(c, px, py, s, 3, theme);
         else if (ch === T.JET_A || ch === T.JET_B) this.drawNozzle(c, px, py, s, theme);
+        else if (ch === T.ICE) this.drawIce(c, px, py, s, map.get(x, y - 1));
       }
     }
   }
@@ -101,6 +102,18 @@ export class Renderer {
     c.fillRect(x + s * 0.3, y, s * 0.4, s * 0.16);
     c.fillStyle = BRAND.coral;
     c.fillRect(x + s * 0.18, y + s * 0.32, s * 0.64, s * 0.1);
+  }
+
+  // Yo dibujo un bloque de hielo: celeste translúcido con brillo diagonal y escarcha arriba.
+  drawIce(c, x, y, s, above) {
+    c.fillStyle = '#9FE3F5';
+    c.fillRect(x, y, Math.ceil(s), Math.ceil(s));
+    c.fillStyle = 'rgba(255,255,255,.45)';
+    c.beginPath(); c.moveTo(x + s * 0.15, y + s); c.lineTo(x + s * 0.45, y + s); c.lineTo(x + s * 0.85, y + s * 0.2); c.lineTo(x + s * 0.55, y + s * 0.2); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(30,90,130,.35)';
+    c.fillRect(x, y + s * 0.82, Math.ceil(s), s * 0.18);
+    // Yo agrego escarcha solo en la cara expuesta de arriba.
+    if (!SOLID.has(above)) { c.fillStyle = '#F4FCFF'; c.fillRect(x, y, Math.ceil(s), Math.max(2, s * 0.14)); }
   }
 
   // Yo dibujo un pincho con rotación (0 arriba, 1 derecha, 2 abajo, 3 izquierda).
@@ -293,6 +306,40 @@ export class Renderer {
       // Yo marco franjas de precaución en los extremos.
       ctx.fillStyle = BRAND.ink;
       for (let i = 0; i < 2; i++) ctx.fillRect(x + (i ? w - tile * 0.3 : tile * 0.1), y + h * 0.35, tile * 0.2, h * 0.35);
+    }
+
+    // Yo dibujo las zonas de viento con vetas que corren (o suben) y copos de aviso.
+    for (const w of map.winds) {
+      if (w.state === 'off') continue;
+      const up = w.dir === 'up', dirX = w.dir === 'left' ? -1 : 1;
+      const n = Math.max(3, Math.round(w.w * w.h * 0.35));
+      ctx.strokeStyle = w.state === 'on' ? 'rgba(235,250,255,.45)' : 'rgba(235,250,255,.15)';
+      ctx.lineWidth = Math.max(1, tile * 0.05);
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const r1 = ((i * 97) % 89) / 89, r2 = ((i * 61) % 83) / 83;
+        const speed = w.state === 'on' ? 1.6 : 0.4;
+        if (up) {
+          const x = w.x + r1 * w.w, y = w.y + w.h - ((r2 * w.h + time * speed * 4) % w.h);
+          ctx.moveTo(cam.sx(x), cam.sy(y)); ctx.lineTo(cam.sx(x), cam.sy(y + 0.6));
+        } else {
+          const y = w.y + r1 * w.h, off = (r2 * w.w + time * speed * 5) % w.w;
+          const x = dirX > 0 ? w.x + off : w.x + w.w - off;
+          ctx.moveTo(cam.sx(x), cam.sy(y)); ctx.lineTo(cam.sx(x - dirX * 0.7), cam.sy(y));
+        }
+      }
+      ctx.stroke();
+    }
+
+    // Yo dibujo los carámbanos: tiemblan antes de caer.
+    for (const c of map.icicles) {
+      if (c.state === 'gone') continue;
+      const shake = c.state === 'shake' ? (Math.random() - 0.5) * tile * 0.1 : 0;
+      const x = cam.sx(c.x) + shake, y = cam.sy(c.fy);
+      ctx.fillStyle = '#C9F1FF';
+      ctx.beginPath(); ctx.moveTo(x + tile * 0.2, y); ctx.lineTo(x + tile * 0.8, y); ctx.lineTo(x + tile * 0.5, y + tile * 0.92); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.8)';
+      ctx.beginPath(); ctx.moveTo(x + tile * 0.32, y); ctx.lineTo(x + tile * 0.48, y); ctx.lineTo(x + tile * 0.5, y + tile * 0.7); ctx.closePath(); ctx.fill();
     }
 
     // Yo dibujo las sierras girando.

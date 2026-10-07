@@ -1,6 +1,7 @@
 // Yo controlo a Blipo: movimiento, saltos, deslizamiento en paredes y animación.
 import { PHYS } from '../config.js';
 import { moveAndCollide, landOnMovers } from '../engine/Physics.js';
+import { WIND } from '../levels/tiles.js';
 
 export class Player {
   // Yo creo al jugador en una posición de tiles.
@@ -32,6 +33,8 @@ export class Player {
     // Yo reinicio el arrastre de cintas y plataformas móviles.
     this.riding = null;
     this.carryX = 0;
+    this.windX = 0;
+    this.onIce = false;
     this.crushed = false;
   }
 
@@ -59,6 +62,7 @@ export class Player {
     // ---- Superficie ----
     // Yo calculo el arrastre de lo que piso: una plataforma móvil me lleva consigo y una cinta me empuja.
     let carry = 0;
+    this.onIce = false;
     if (this.riding) {
       carry = this.riding.vx;
       this.y += this.riding.my;
@@ -67,17 +71,23 @@ export class Player {
       if (map.isSolid(Math.floor(this.x + 0.05), hy) || map.isSolid(Math.floor(this.x + this.w - 0.05), hy)) this.crushed = true;
     } else if (this.onGround && this.lastCol) {
       for (const t of this.lastCol.groundTiles) {
+        if (map.isIce(t.x, t.y)) this.onIce = true;
         const d = map.beltDir(t.x, t.y);
         if (d) { carry = d * PHYS.BELT_SPEED; break; }
       }
     }
     this.carryX = carry;
+    // Yo leo el viento donde estoy: empuja de lado o me levanta en las corrientes.
+    const wind = map.windAt(this.x + this.w / 2, this.y + this.h / 2);
+    this.windX = wind.x;
 
     // ---- Movimiento horizontal ----
     if (this.lockX <= 0) {
       const target = dir * PHYS.MOVE_SPEED;
       // Yo elijo aceleración o fricción según haya input y dónde esté.
-      const rate = dir !== 0 ? (this.onGround ? PHYS.ACCEL_GROUND : PHYS.ACCEL_AIR) : (this.onGround ? PHYS.FRICTION_GROUND : PHYS.FRICTION_AIR);
+      // Yo patino sobre el hielo: acelero y freno mucho menos.
+      const ground = this.onIce ? [PHYS.ICE_ACCEL, PHYS.ICE_FRICTION] : [PHYS.ACCEL_GROUND, PHYS.FRICTION_GROUND];
+      const rate = dir !== 0 ? (this.onGround ? ground[0] : PHYS.ACCEL_AIR) : (this.onGround ? ground[1] : PHYS.FRICTION_AIR);
       // Yo muevo la velocidad hacia el objetivo sin pasarme.
       if (this.vx < target) this.vx = Math.min(target, this.vx + rate * dt);
       else if (this.vx > target) this.vx = Math.max(target, this.vx - rate * dt);
@@ -120,6 +130,8 @@ export class Player {
 
     // ---- Gravedad ----
     this.vy += PHYS.GRAVITY * dt;
+    // Yo subo con las corrientes de aire hasta su velocidad máxima.
+    if (wind.y) { this.vy += wind.y * dt; this.vy = Math.max(this.vy, -WIND.LIFT_MAX); if (this.vy < 0) this.cut = true; }
     // Yo limito la caída al deslizar por la pared y recargo el doble salto (como el prototipo).
     if (this.sliding) { this.vy = Math.min(this.vy, PHYS.WALL_SLIDE_SPEED); this.airJumps = 1; }
     this.vy = Math.min(this.vy, PHYS.MAX_FALL);

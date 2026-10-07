@@ -105,6 +105,15 @@ export class Game {
     // Yo reviso si cayó fuera del mapa o tocó un peligro.
     if (p.crushed || p.y > this.map.rows + 1 || this.map.hitsHazard(p.hurtBox())) { this.die(); return; }
 
+    // Yo hago crujir y romperse los carámbanos con sonido y esquirlas.
+    for (const c of this.map.icicles) {
+      if (c.cracked) this.audio.sfx('crack');
+      if (c.shattered && c.fy < this.map.rows) {
+        this.particles.emit(c.x + 0.5, c.fy + 0.8, { count: 10, color: '#D9F6FF', speed: 4, life: 0.45, gravity: 14, size: 0.12, angle: -Math.PI / 2, spread: Math.PI });
+        if (Math.abs(c.x + 0.5 - p.cx) < 14) this.audio.sfx('shatter');
+      }
+    }
+
     // Yo hago sonar las llamaradas que se encienden cerca del jugador.
     for (const j of this.map.jets) {
       if (j.ignited && Math.abs(j.x + 0.5 - p.cx) < 12 && Math.abs(j.y - p.cy) < 9) { this.audio.sfx('flame'); break; }

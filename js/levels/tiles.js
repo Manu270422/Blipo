@@ -22,10 +22,12 @@ export const T = Object.freeze({
   BELT_RIGHT: ')',   // Yo marco una cinta transportadora que arrastra a la derecha.
   JET_A: 'F',        // Yo marco una boquilla de llamarada (fase A).
   JET_B: 'f',        // Yo marco una boquilla de llamarada (fase B, alterna con la A).
+  ICE: 'I',          // Yo marco un bloque de hielo resbaloso.
+  ICICLE: 'Y',       // Yo marco un carámbano que cuelga y cae cuando Blipo pasa debajo.
 });
 
 // Yo defino qué tiles bloquean el paso siempre.
-export const SOLID = new Set([T.GROUND, T.FILL, T.BOUNCE, T.BELT_LEFT, T.BELT_RIGHT, T.JET_A, T.JET_B]);
+export const SOLID = new Set([T.GROUND, T.FILL, T.BOUNCE, T.BELT_LEFT, T.BELT_RIGHT, T.JET_A, T.JET_B, T.ICE]);
 
 // Yo defino hacia dónde arrastra cada cinta (-1 izquierda, 1 derecha).
 export const BELT_DIR = { [T.BELT_LEFT]: -1, [T.BELT_RIGHT]: 1 };
@@ -47,6 +49,23 @@ export const JET = Object.freeze({
   WARN: 0.45,        // Yo echo chispas antes de encender para que la muerte sea justa.
   ON: 1.0,           // Yo mantengo la llama encendida durante 1 segundo.
   HEIGHT: 2.6,       // Yo alcanzo 2.6 tiles por encima de la boquilla.
+});
+
+// Yo defino el comportamiento de los carámbanos.
+export const ICICLE = Object.freeze({
+  RANGE: 1.1,        // Yo me suelto si Blipo pasa a menos de 1.1 tiles de mi centro (en horizontal).
+  SHAKE: 0.35,       // Yo tiemblo un instante antes de caer para avisar.
+  GRAVITY: 38,       // Yo caigo con esta gravedad.
+  MAX_FALL: 18,      // Yo limito mi velocidad de caída.
+  RESPAWN: 2.5,      // Yo vuelvo a crecer en el techo tras romperme.
+});
+
+// Yo defino el viento: ráfagas horizontales y corrientes que suben.
+export const WIND = Object.freeze({
+  FORCE: 5,          // Yo empujo a 5 tiles por segundo por defecto.
+  LIFT: 75,          // Yo acelero hacia arriba en las corrientes (más que la gravedad).
+  LIFT_MAX: 9,       // Yo limito la velocidad de subida en las corrientes.
+  WARN: 0.5,         // Yo levanto copos de aviso antes de cada ráfaga.
 });
 
 // Yo devuelvo la fase de una boquilla: 'off', 'warn' u 'on'.
