@@ -27,18 +27,29 @@ export function moveAndCollide(body, map, dt) {
   body.y += body.vy * dt;
   // Yo calculo las columnas que ocupa el cuerpo.
   const cx0 = Math.floor(body.x + EPS), cx1 = Math.floor(body.x + body.w - EPS);
+  // Yo sé hacia dónde cae el cuerpo: 1 hacia abajo (normal) o -1 hacia arriba (gravedad invertida).
+  const g = body.g || 1;
+  // Yo guardo como "suelo" lo que toco del lado de los pies y como "techo" lo del lado de la cabeza.
+  const hit = (tiles) => {
+    if (!tiles.length) return;
+    body.vy = 0;
+    if ((body.y + body.h / 2 < tiles[0].y + 0.5) === (g > 0)) { res.onGround = true; res.groundTiles.push(...tiles); } else res.ceiling = true;
+  };
   if (body.vy > 0) {
-    // Yo reviso la fila de los pies.
+    // Yo reviso la fila de abajo.
     const fy = Math.floor(body.y + body.h - EPS);
-    for (let x = cx0; x <= cx1; x++) {
-      if (map.isSolid(x, fy)) { res.onGround = true; res.groundTiles.push({ x, y: fy }); }
-    }
-    // Yo apoyo el cuerpo encima del suelo.
-    if (res.onGround) { body.y = fy - body.h; body.vy = 0; }
+    const tiles = [];
+    for (let x = cx0; x <= cx1; x++) if (map.isSolid(x, fy)) tiles.push({ x, y: fy });
+    // Yo apoyo el cuerpo encima del bloque.
+    if (tiles.length) body.y = fy - body.h;
+    hit(tiles);
   } else if (body.vy < 0) {
-    // Yo reviso la fila de la cabeza.
+    // Yo reviso la fila de arriba.
     const hy = Math.floor(body.y + EPS);
-    for (let x = cx0; x <= cx1; x++) if (map.isSolid(x, hy)) { body.y = hy + 1; body.vy = 0; res.ceiling = true; break; }
+    const tiles = [];
+    for (let x = cx0; x <= cx1; x++) if (map.isSolid(x, hy)) tiles.push({ x, y: hy });
+    if (tiles.length) body.y = hy + 1;
+    hit(tiles);
   }
 
   // ---- Sensores ----
@@ -50,10 +61,15 @@ export function moveAndCollide(body, map, dt) {
     if (map.isSolid(probeR, y)) res.touchR = true;
     if (map.isSolid(probeL, y)) res.touchL = true;
   }
-  // Yo confirmo suelo cuando estoy quieto justo encima de él.
-  if (!res.onGround && body.vy >= 0) {
-    const fy = Math.floor(body.y + body.h + 0.02);
-    for (let x = cx0; x <= cx1; x++) if (map.isSolid(x, fy) && Math.abs(body.y + body.h - fy) < 0.03) { res.onGround = true; res.groundTiles.push({ x, y: fy }); }
+  // Yo confirmo suelo cuando estoy quieto justo apoyado (debajo, o arriba con gravedad invertida).
+  if (!res.onGround && body.vy * g >= 0) {
+    if (g > 0) {
+      const fy = Math.floor(body.y + body.h + 0.02);
+      for (let x = cx0; x <= cx1; x++) if (map.isSolid(x, fy) && Math.abs(body.y + body.h - fy) < 0.03) { res.onGround = true; res.groundTiles.push({ x, y: fy }); }
+    } else {
+      const hy = Math.floor(body.y - 0.02);
+      for (let x = cx0; x <= cx1; x++) if (map.isSolid(x, hy) && Math.abs(body.y - (hy + 1)) < 0.03) { res.onGround = true; res.groundTiles.push({ x, y: hy }); }
+    }
   }
   return res;
 }

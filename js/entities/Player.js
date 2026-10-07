@@ -12,10 +12,11 @@ export class Player {
   }
 
   // Yo coloco al jugador en el punto de aparición y reinicio su estado.
-  spawn(x, y) {
-    // Yo centro la caja dentro del tile y apoyo los pies en su base.
+  spawn(x, y, g = 1) {
+    // Yo centro la caja dentro del tile y apoyo los pies en su base (o en su techo si la gravedad está invertida).
+    this.g = g;
     this.x = x + (1 - this.w) / 2;
-    this.y = y + (1 - this.h);
+    this.y = g > 0 ? y + (1 - this.h) : y;
     this.vx = 0; this.vy = 0;
     this.onGround = false;
     this.airJumps = 1;
@@ -51,6 +52,10 @@ export class Player {
 
   // Yo avanzo un paso de simulación. "emit" reporta eventos (salto, aterrizaje...).
   update(dt, input, map, emit) {
+    // Yo leo hacia dónde caigo (1 normal, -1 invertido); todas las velocidades verticales se miden contra esto.
+    const g = this.g;
+    // Yo muero aplastado si un bloque aparece encima de mí (interruptores y bloques de ritmo).
+    if (map.overlapsSolid(this)) { this.crushed = true; return; }
     // Yo leo la dirección deseada.
     const dir = (input.right ? 1 : 0) - (input.left ? 1 : 0);
     // Yo registro el salto encolado en el buffer.
@@ -100,19 +105,19 @@ export class Player {
     // Yo detecto si estoy empujando contra una pared en el aire.
     const touching = this.lastCol ? (this.lastCol.touchR ? 1 : this.lastCol.touchL ? -1 : 0) : 0;
     this.wallDir = touching;
-    this.sliding = !this.onGround && touching !== 0 && dir === touching && this.vy > 0;
+    this.sliding = !this.onGround && touching !== 0 && dir === touching && this.vy * g > 0;
 
     // ---- Saltos ----
     if (this.buffer > 0) {
       if (this.coyote > 0) {
         // Yo salto desde el suelo.
-        this.vy = -PHYS.JUMP_VEL;
+        this.vy = -PHYS.JUMP_VEL * g;
         this.coyote = 0; this.buffer = 0; this.cut = false; this.onGround = false;
         this.stretch(0.72, 1.3);
         emit('jump');
       } else if (!this.onGround && touching !== 0) {
         // Yo salto desde la pared en dirección contraria.
-        this.vy = -PHYS.WALL_JUMP_VY;
+        this.vy = -PHYS.WALL_JUMP_VY * g;
         this.vx = -touching * PHYS.WALL_JUMP_VX;
         this.facing = -touching;
         this.lockX = PHYS.WALL_JUMP_LOCK;
@@ -121,38 +126,38 @@ export class Player {
         emit('walljump', { dir: touching });
       } else if (this.airJumps > 0) {
         // Yo hago el doble salto.
-        this.vy = -PHYS.DOUBLE_JUMP_VEL;
+        this.vy = -PHYS.DOUBLE_JUMP_VEL * g;
         this.airJumps -= 1; this.buffer = 0; this.cut = false;
         this.stretch(0.7, 1.35);
         emit('double');
       }
     }
     // Yo recorto el salto si soltó el botón temprano.
-    if (!input.jump && !this.cut && this.vy < 0) { this.vy *= PHYS.JUMP_CUT; this.cut = true; }
+    if (!input.jump && !this.cut && this.vy * g < 0) { this.vy *= PHYS.JUMP_CUT; this.cut = true; }
 
     // ---- Gravedad ----
-    this.vy += PHYS.GRAVITY * dt;
+    this.vy += PHYS.GRAVITY * g * dt;
     // Yo quedo atrapado en la telaraña: caigo lento, subo a toques y recupero el doble salto.
     this.inWeb = map.inWeb(this);
     if (this.inWeb) {
-      this.vy = Math.max(-PHYS.WEB_RISE, Math.min(this.vy, PHYS.WEB_FALL));
+      this.vy = Math.max(-PHYS.WEB_RISE, Math.min(this.vy * g, PHYS.WEB_FALL)) * g;
       this.vx = Math.max(-PHYS.WEB_SPEED, Math.min(this.vx, PHYS.WEB_SPEED));
       this.airJumps = 1;
     }
     // Yo subo con las corrientes de aire hasta su velocidad máxima.
-    if (wind.y) { this.vy += wind.y * dt; this.vy = Math.max(this.vy, -WIND.LIFT_MAX); if (this.vy < 0) this.cut = true; }
+    if (wind.y && g > 0) { this.vy += wind.y * dt; this.vy = Math.max(this.vy, -WIND.LIFT_MAX); if (this.vy < 0) this.cut = true; }
     // Yo limito la caída al deslizar por la pared y recargo el doble salto (como el prototipo).
-    if (this.sliding) { this.vy = Math.min(this.vy, PHYS.WALL_SLIDE_SPEED); this.airJumps = 1; }
-    this.vy = Math.min(this.vy, PHYS.MAX_FALL);
+    if (this.sliding) { this.vy = Math.min(this.vy * g, PHYS.WALL_SLIDE_SPEED) * g; this.airJumps = 1; }
+    this.vy = Math.min(this.vy * g, PHYS.MAX_FALL) * g;
 
     // ---- Colisión ----
-    const impact = this.vy;
+    const impact = this.vy * g;
     const wasGround = this.onGround;
     const prevBottom = this.y + this.h;
     const col = moveAndCollide(this, map, dt);
     this.lastCol = col;
     // Yo reviso si caí (o sigo parado) sobre una plataforma móvil.
-    this.riding = col.onGround ? null : landOnMovers(this, map.movers, prevBottom);
+    this.riding = col.onGround || g < 0 ? null : landOnMovers(this, map.movers, prevBottom);
     this.onGround = col.onGround || !!this.riding;
     // Yo convierto el arrastre en impulso propio al despegar, así el salto conserva la inercia.
     if (!this.onGround && this.carryX) { this.vx += this.carryX; this.carryX = 0; }
@@ -166,6 +171,15 @@ export class Player {
     // Yo reporto los tiles pisados para resortes y bloques frágiles.
     if (this.onGround) emit('ground', col.groundTiles);
 
+    // ---- Vacío ----
+    // Yo invierto la gravedad al tocar un orbe y presiono los interruptores que atravieso.
+    if (map.flipAt(this)) {
+      this.g = -this.g; this.vy = 0; this.airJumps = 1; this.onGround = false; this.coyote = 0;
+      this.stretch(1.3, 0.7);
+      emit('flip');
+    }
+    if (map.pressSwitch(this)) emit('switch');
+
     // ---- Animación ----
     // Yo devuelvo la deformación a su forma natural.
     const k = 1 - Math.pow(0.0005, dt);
@@ -178,7 +192,7 @@ export class Player {
 
   // Yo lanzo al jugador hacia arriba (resorte).
   launch(vel) {
-    this.vy = -vel;
+    this.vy = -vel * this.g;
     this.onGround = false;
     this.cut = true;
     this.airJumps = 1;

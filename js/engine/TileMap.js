@@ -1,6 +1,6 @@
 // Yo convierto la definición de un nivel en una grilla consultable y extraigo sus objetos dinámicos.
 import { GRID, GAME } from '../config.js';
-import { T, SOLID, HAZARD_BOX, SAW_RADIUS, BELT_DIR, JET, ICICLE, WIND, jetPhase } from '../levels/tiles.js';
+import { T, SOLID, HAZARD_BOX, SAW_RADIUS, BELT_DIR, JET, ICICLE, WIND, jetPhase, phaseAOn } from '../levels/tiles.js';
 import { Mover } from '../entities/Mover.js';
 
 export class TileMap {
@@ -24,6 +24,13 @@ export class TileMap {
     this.jets = [];
     this.icicles = [];
     this.crystals = [];
+    this.orbs = [];
+    this.switches = [];
+    this.toggles = [];
+    this.phases = [];
+    // Yo empiezo con el interruptor encendido ('A' sólidos, 'a' fantasmas) y la fase A activa.
+    this.switchOn = true;
+    this.phaseA = true;
     // Yo creo las zonas de viento descritas en el nivel ({ x, y, w, h, dir, force, period, on, phase }).
     this.winds = (def.winds || []).map((w) => ({ force: WIND.FORCE, period: 0, on: 0, phase: 0, ...w, state: 'on' }));
     // Yo creo las plataformas móviles descritas en el nivel.
@@ -51,6 +58,10 @@ export class TileMap {
           case T.CRUMBLE: this.crumbles.push({ x, y, state: 'solid', t: 0 }); break;
           case T.BOUNCE: case T.MUSHROOM: this.bounces.push({ x, y, t: 0, mushroom: c === T.MUSHROOM }); break;
           case T.CRYSTAL: this.crystals.push({ x, y, lit: false }); this.grid[y][x] = T.EMPTY; break;
+          case T.ORB: this.orbs.push({ x, y, armed: true }); this.grid[y][x] = T.EMPTY; break;
+          case T.SWITCH: this.switches.push({ x, y, armed: true }); this.grid[y][x] = T.EMPTY; break;
+          case T.SWITCH_ON: case T.SWITCH_OFF: this.toggles.push({ x, y, on: c === T.SWITCH_ON }); break;
+          case T.PHASE_A: case T.PHASE_B: this.phases.push({ x, y, a: c === T.PHASE_A }); break;
           case T.SAW: this.saws.push({ x, y }); break;
           case T.BELT_LEFT: case T.BELT_RIGHT: this.belts.push({ x, y, dir: BELT_DIR[c] }); break;
           case T.JET_A: case T.JET_B: this.jets.push({ x, y, ch: c }); break;
@@ -69,6 +80,36 @@ export class TileMap {
       j.reach = Math.min(JET.HEIGHT, reach);
       j.phase = jetPhase(j.ch, 0);
     }
+  }
+
+  // Yo indico si una caja (un poco encogida) quedó metida dentro de un bloque sólido.
+  overlapsSolid(box) {
+    const i = 0.12;
+    for (let y = Math.floor(box.y + i); y <= Math.floor(box.y + box.h - i); y++) {
+      for (let x = Math.floor(box.x + i); x <= Math.floor(box.x + box.w - i); x++) if (y >= 0 && y < this.rows && this.isSolid(x, y)) return true;
+    }
+    return false;
+  }
+
+  // Yo invierto la gravedad cuando Blipo toca un orbe; el orbe se recarga cuando Blipo se aleja.
+  flipAt(p) {
+    const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
+    let flipped = false;
+    for (const o of this.orbs) {
+      const d = (o.x + 0.5 - cx) ** 2 + (o.y + 0.5 - cy) ** 2;
+      if (o.armed && d < 0.5 && !flipped) { o.armed = false; flipped = true; } else if (!o.armed && d > 2.2) o.armed = true;
+    }
+    return flipped;
+  }
+
+  // Yo alterno los bloques 'A'/'a' cuando Blipo entra en un interruptor; se vuelve a usar al salir de él.
+  pressSwitch(p) {
+    let pressed = false;
+    for (const s of this.switches) {
+      const over = p.x < s.x + 0.85 && p.x + p.w > s.x + 0.15 && p.y < s.y + 1 && p.y + p.h > s.y;
+      if (over && s.armed && !pressed) { s.armed = false; pressed = true; this.switchOn = !this.switchOn; } else if (!over) s.armed = true;
+    }
+    return pressed;
   }
 
   // Yo indico si una caja toca alguna telaraña.
@@ -111,6 +152,10 @@ export class TileMap {
     const c = this.grid[y][x];
     // Yo consulto el estado del bloque frágil.
     if (c === T.CRUMBLE) return this.crumbleAt.get(y * this.cols + x).state !== 'gone';
+    if (c === T.SWITCH_ON) return this.switchOn;
+    if (c === T.SWITCH_OFF) return !this.switchOn;
+    if (c === T.PHASE_A) return this.phaseA;
+    if (c === T.PHASE_B) return !this.phaseA;
     return SOLID.has(c);
   }
 
@@ -167,6 +212,8 @@ export class TileMap {
       w.state = t < w.on ? 'on' : t > w.period - WIND.WARN ? 'warn' : 'off';
     }
     this.updateIcicles(dt, playerBox);
+    // Yo alterno los bloques de ritmo.
+    if (this.phases.length) this.phaseA = phaseAOn(this.time);
     for (const c of this.crumbles) {
       if (c.state === 'shaking') {
         // Yo cuento hacia abajo y lo hago caer.
@@ -220,8 +267,12 @@ export class TileMap {
   }
 
   // Yo reinicio los objetos que deben volver a su estado tras morir.
-  resetDynamic() {
+  resetDynamic(switchOn = true) {
     for (const c of this.crumbles) { c.state = 'solid'; c.t = 0; }
+    // Yo devuelvo el interruptor al estado guardado y recargo orbes e interruptores.
+    this.switchOn = switchOn;
+    for (const o of this.orbs) o.armed = true;
+    for (const s of this.switches) s.armed = true;
     for (const c of this.icicles) { c.state = 'hang'; c.fy = c.y; c.vy = 0; c.t = 0; }
   }
 }

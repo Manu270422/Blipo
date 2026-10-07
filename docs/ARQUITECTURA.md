@@ -20,7 +20,7 @@ blipo/
 │   ├── systems/            Input (teclado/táctil/mando), Audio (sintetizado), Haptics
 │   ├── engine/             TileMap, Physics, Camera, Particles, Renderer, Backdrop (fondo con paralaje)
 │   ├── entities/           Player (coyote time, buffer, doble salto, wall jump), Mover (plataforma móvil), Skins
-│   ├── levels/             tiles, campaign (Cantera), caves (Cavernas), foundry (Fundición), glacier (Glaciar), generator (procedural), worlds
+│   ├── levels/             tiles, campaign (Cantera), caves (Cavernas), foundry (Fundición), glacier (Glaciar), void (Vacío), generator (reto diario y supervivencia), worlds
 │   ├── game/               Game (partida), Progress, Achievements, Daily
 │   ├── ui/                 ScreenManager, Hud, TouchControls, Toast, Dialog, Mascot
 │   │   └── views/          Una vista por pantalla
@@ -38,7 +38,7 @@ blipo/
 5. `Storage` guarda en `localStorage` con escritura diferida y `flush()` al salir o pasar a segundo plano.
 
 ## Cómo agregar…
-- **Un nivel a mano:** añade un objeto en `js/levels/campaign.js`, `caves.js`, `foundry.js` o `glacier.js` con los caracteres de `tiles.js` y su nombre en `i18n`. El mapa puede medir más de 40×22: la cámara mantiene la escala estándar y lo recorre. Opcional: `movers` (plataformas móviles `{ x, y, w, dx, dy, period, phase }`) `winds` (viento `{ x, y, w, h, dir: 'left' | 'right' | 'up', force, period, on, phase }`; sin `period` sopla siempre) `dark: true` (cueva oscura con luz alrededor de Blipo y de los cristales `L`) y `hint` (llave de un aviso que explica la mecánica).
+- **Un nivel a mano:** añade un objeto en `js/levels/campaign.js`, `caves.js`, `foundry.js`, `glacier.js` o `void.js` con los caracteres de `tiles.js` y su nombre en `i18n`. El mapa puede medir más de 40×22: la cámara mantiene la escala estándar y lo recorre. Opcional: `movers` (plataformas móviles `{ x, y, w, dx, dy, period, phase }`) `winds` (viento `{ x, y, w, h, dir: 'left' | 'right' | 'up', force, period, on, phase }`; sin `period` sopla siempre) `dark: true` (cueva oscura con luz alrededor de Blipo y de los cristales `L`) y `hint` (llave de un aviso que explica la mecánica).
 - **Verificar niveles:** `npm run check:levels` (o `node tools/check-levels.mjs <mundo> <nivel>`) juega cada nivel hecho a mano con la física real y confirma que tiene salida y que las 3 gemas se pueden recoger.
 - **Un mundo:** agrega una entrada en `WORLDS` (`js/levels/worlds.js`) y su llave de texto.
 - **Una skin:** agrega en `SKINS` (`js/entities/Skins.js`) y `skin_<id>` en `i18n`.

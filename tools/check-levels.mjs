@@ -32,11 +32,13 @@ function cloneMap(m) {
   if (m.jets.length) c.jets = m.jets.map((o) => ({ ...o }));
   if (m.icicles.length) c.icicles = m.icicles.map((o) => ({ ...o }));
   if (m.winds.length) c.winds = m.winds.map((o) => ({ ...o }));
+  if (m.orbs.length) c.orbs = m.orbs.map((o) => ({ ...o }));
+  if (m.switches.length) c.switches = m.switches.map((o) => ({ ...o }));
   return c;
 }
 
 // Yo copio al jugador campo por campo (mucho más rápido que Object.assign) y reconecto su plataforma.
-const PLAYER_FIELDS = ['w', 'h', 'x', 'y', 'vx', 'vy', 'onGround', 'airJumps', 'coyote', 'buffer', 'lockX', 'cut', 'facing', 'wallDir', 'sliding', 'sqX', 'sqY', 'alive', 'lastCol', 'carryX', 'windX', 'onIce', 'inWeb', 'crushed'];
+const PLAYER_FIELDS = ['w', 'h', 'x', 'y', 'vx', 'vy', 'onGround', 'airJumps', 'coyote', 'buffer', 'lockX', 'cut', 'facing', 'wallDir', 'sliding', 'sqX', 'sqY', 'alive', 'lastCol', 'carryX', 'windX', 'onIce', 'inWeb', 'crushed', 'g'];
 function clonePlayer(p, oldMap, newMap) {
   const c = Object.create(Player.prototype);
   for (const f of PLAYER_FIELDS) c[f] = p[f];
@@ -94,6 +96,11 @@ function key(n) {
   }
   if (map.jets.some((j) => Math.abs(j.x + 0.5 - p.cx) < 5 && Math.abs(j.y - p.cy) < 5)) k += `,j${Math.round((map.time % 2.4) / 0.1)}`;
   if (map.crumbles.length) k += `,${map.crumbles.map((c) => c.state[0]).join('')}`;
+  // Yo recuerdo la gravedad, el interruptor, el ritmo de los bloques cercanos y qué orbes cercanos están listos.
+  k += `,g${p.g},s${map.switchOn ? 1 : 0}`;
+  if (map.phases.some((b) => Math.abs(b.x + 0.5 - p.cx) < 6 && Math.abs(b.y + 0.5 - p.cy) < 6)) k += `,p${Math.round((((map.time % 3) + 3) % 3) / 0.1)}`;
+  for (const o of map.orbs) if (Math.abs(o.x + 0.5 - p.cx) < 3 && Math.abs(o.y + 0.5 - p.cy) < 3) k += o.armed ? ',o1' : ',o0';
+  for (const sw of map.switches) if (Math.abs(sw.x + 0.5 - p.cx) < 2 && Math.abs(sw.y + 0.5 - p.cy) < 2) k += sw.armed ? ',q1' : ',q0';
   // Yo detallo los carámbanos cercanos (estado y altura) y de los lejanos solo si siguen colgando.
   for (const c of map.icicles) {
     const near = Math.abs(c.x + 0.5 - p.cx) < 6 && Math.abs(c.y - p.cy) < 12;
@@ -129,6 +136,8 @@ function distanceField(map, targets) {
   // Yo marco dónde se puede pisar (bloques y recorridos de plataformas móviles).
   const support = new Uint8Array(cols * rows);
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) if (blocked(x, y) || map.get(x, y) === T.CRUMBLE) support[y * cols + x] = 1;
+  // Yo trato los bloques que cambian como apoyo (a veces están).
+  for (const b of [...map.toggles, ...map.phases]) support[b.y * cols + b.x] = 1;
   // Yo trato las telarañas como apoyo: se escalan a toques.
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) if (map.get(x, y) === T.WEB) support[y * cols + x] = 1;
   // Yo trato las corrientes de aire como apoyo: suben a Blipo.
@@ -147,6 +156,8 @@ function distanceField(map, targets) {
     if (blocked(x - 1, y) || blocked(x + 1, y)) return 0;
     let k = 0;
     while (k < 12 && y + k + 1 < rows && !support[(y + k + 1) * cols + x]) k++;
+    // Yo con orbes de gravedad también cuento el aire hacia arriba: se puede caer hacia el techo.
+    if (map.orbs.length) { let u = 0; while (u < k && y - u - 1 >= 0 && !support[(y - u - 1) * cols + x]) u++; k = Math.min(k, u); }
     return k;
   };
   // Yo cobro poco hasta la altura de un salto, más con el doble salto y casi prohibido por encima.

@@ -147,6 +147,23 @@ export default {
   hint_web: 'Las telarañas frenan tu caída. Toca saltar para trepar por ellas.',
   hint_dark: 'Está oscuro: toca los cristales para iluminar la cueva.',
 
+  // Yo defino los nombres de los niveles del Vacío.
+  l_flip: 'Al revés',
+  l_mirror: 'Espejo',
+  l_switch: 'Interruptor',
+  l_tempo: 'Compás',
+  l_ceiling: 'Por el techo',
+  l_two_keys: 'Doble llave',
+  l_orbit: 'Órbita',
+  l_station: 'Estación',
+  l_vortex: 'Vórtice',
+  l_pulse: 'Pulso',
+  l_void_maze: 'Laberinto del vacío',
+  l_void_heart: 'Corazón del vacío',
+  hint_gravity: 'Los orbes invierten la gravedad: caerás hacia el techo. Toca otro para volver.',
+  hint_switch: 'Los interruptores alternan los bloques rosas y turquesas.',
+  hint_phase: 'Los bloques de ritmo se turnan solos y parpadean antes de cambiar.',
+
   // Yo defino los nombres de las skins.
   skin_blipo: 'Blipo',
   skin_flama: 'Flama',
