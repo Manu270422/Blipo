@@ -1,7 +1,7 @@
 {
   "name": "BLIPO — Un ojo. Dos saltos.",
   "short_name": "BLIPO",
-  "description": "Plataformas de precisión con reto diario, supervivencia, 48 niveles y skins. Un ojo. Dos saltos. Cero excusas.",
+  "description": "Plataformas de precisión con reto diario, supervivencia, 50 niveles y skins. Un ojo. Dos saltos. Cero excusas.",
   "id": "./",
   "start_url": "./index.html?source=pwa",
   "scope": "./",

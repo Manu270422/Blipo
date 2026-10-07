@@ -22,6 +22,8 @@ export const PHYS = Object.freeze({
   WALL_JUMP_LOCK: 0.14,   // Yo bloqueo el input horizontal un instante tras el wall jump.
   BOUNCE_VEL: 24,         // Yo lanzo al jugador con el resorte (~7 tiles).
   BELT_SPEED: 4.5,        // Yo arrastro al jugador sobre las cintas transportadoras.
+  ICE_ACCEL: 16,          // Yo acelero poco sobre el hielo: cuesta arrancar.
+  ICE_FRICTION: 3.5,      // Yo casi no freno sobre el hielo: Blipo patina.
   COYOTE_TIME: 0.1,       // Yo permito saltar unos milisegundos después de dejar el borde.
   JUMP_BUFFER: 0.12,      // Yo recuerdo el salto pulsado justo antes de aterrizar.
   PLAYER_W: 0.72,         // Yo defino el ancho de la caja de colisión del jugador.

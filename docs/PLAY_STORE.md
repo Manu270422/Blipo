@@ -31,10 +31,10 @@ Sube `assetlinks.json` a `/.well-known/` del dominio para quitar la barra del na
 
 ## Ficha de Play Store (textos listos)
 - **Nombre:** BLIPO: Un ojo, dos saltos
-- **Descripción corta (80):** Plataformas de precisión: reto diario, supervivencia y 48 niveles. ¿Aguantas?
+- **Descripción corta (80):** Plataformas de precisión: reto diario, supervivencia y 50 niveles. ¿Aguantas?
 - **Descripción larga:**
   Blipo tiene un solo ojo y dos saltos. Tú pones las excusas… o no.
-  • 48 niveles en 5 mundos: Cantera, Cavernas, Fundición, Glaciar y Vacío.
+  • 50 niveles en 5 mundos: Cantera, Cavernas, Fundición, Glaciar y Vacío.
   • Reto diario: el mismo nivel para todo el mundo. Mantén tu racha y compártela.
   • Supervivencia: salas infinitas, 5 vidas, ¿hasta dónde llegas?
   • Doble salto, salto de pared, portales, resortes, bloques frágiles y sierras.
