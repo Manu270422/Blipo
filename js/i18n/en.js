@@ -130,6 +130,23 @@ export default {
   hint_wind: 'Wind pushes you and updrafts lift you. Ride it.',
   hint_gusts: 'Gusts come and go: snowflakes warn you before they blow.',
 
+  // Yo defino los nombres de los niveles de las Cavernas.
+  l_hollow: 'The grotto',
+  l_roots: 'Roots',
+  l_webs: 'Cobwebs',
+  l_silk: 'Silk',
+  l_gloom: 'Gloom',
+  l_glow: 'Glimmer',
+  l_well: 'The well',
+  l_tunnels: 'Tunnels',
+  l_dark_maze: 'Dark maze',
+  l_spores: 'Spores',
+  l_abyss: 'The abyss',
+  l_cave_heart: 'Cave heart',
+  hint_mushroom: 'Mushrooms bounce you up. Combine them with your double jump!',
+  hint_web: 'Webs slow your fall. Tap jump to climb through them.',
+  hint_dark: 'It is dark: touch the crystals to light up the cave.',
+
   // Yo defino los nombres de las skins.
   skin_blipo: 'Blipo',
   skin_flama: 'Flame',

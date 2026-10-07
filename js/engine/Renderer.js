@@ -39,6 +39,37 @@ export class Renderer {
     this.w = 0; this.h = 0;
   }
 
+  // Yo pinto la capa de oscuridad y le recorto agujeros de luz con degradados.
+  drawDarkness(game) {
+    const { dpr } = this;
+    const cam = game.camera, map = game.map, tile = cam.tile, time = game.clock;
+    if (!this.shade) { this.shade = document.createElement('canvas'); this.shadeCtx = this.shade.getContext('2d'); }
+    if (this.shade.width !== this.canvas.width || this.shade.height !== this.canvas.height) { this.shade.width = this.canvas.width; this.shade.height = this.canvas.height; }
+    const c = this.shadeCtx;
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.globalCompositeOperation = 'source-over';
+    c.clearRect(0, 0, this.w, this.h);
+    // Yo aclaro un poco la oscuridad con alto contraste o reducir efectos para que siga siendo jugable.
+    c.fillStyle = `rgba(4,6,14,${game.opts.highContrast ? 0.78 : 0.93})`;
+    c.fillRect(cam.sx(0), cam.sy(0), cam.worldW, cam.worldH);
+    c.globalCompositeOperation = 'destination-out';
+    const light = (x, y, r) => {
+      const px = cam.sx(x), py = cam.sy(y), pr = r * tile;
+      const g = c.createRadialGradient(px, py, pr * 0.15, px, py, pr);
+      g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.55, 'rgba(0,0,0,.75)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = g; c.beginPath(); c.arc(px, py, pr, 0, Math.PI * 2); c.fill();
+    };
+    const p = game.player;
+    if (p) light(p.cx, p.cy, 5.5 + Math.sin(time * 2) * 0.15);
+    for (const k of map.crystals) light(k.x + 0.5, k.y + 0.5, k.lit ? 7 : 1.6);
+    for (const g of map.gems) if (!g.taken) light(g.x + 0.5, g.y + 0.5, 1.3);
+    for (const e of map.exits) light(e.x + 0.5, e.y + 0.5, 2.6);
+    for (const k of map.checkpoints) light(k.x + 0.5, k.y + 0.5, k.active ? 4 : 1.4);
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.ctx.drawImage(this.shade, 0, 0);
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
   // Yo ajusto el canvas a la pantalla respetando la densidad de píxeles.
   resize(w, h) {
     // Yo limito la densidad a 2 para cuidar la batería en móviles de gama alta.
@@ -76,6 +107,7 @@ export class Renderer {
         else if (ch === T.SPIKE_LEFT) this.drawSpike(c, px, py, s, 3, theme);
         else if (ch === T.JET_A || ch === T.JET_B) this.drawNozzle(c, px, py, s, theme);
         else if (ch === T.ICE) this.drawIce(c, px, py, s, map.get(x, y - 1));
+        else if (ch === T.WEB) this.drawWeb(c, px, py, s);
       }
     }
   }
@@ -114,6 +146,30 @@ export class Renderer {
     c.fillRect(x, y + s * 0.82, Math.ceil(s), s * 0.18);
     // Yo agrego escarcha solo en la cara expuesta de arriba.
     if (!SOLID.has(above)) { c.fillStyle = '#F4FCFF'; c.fillRect(x, y, Math.ceil(s), Math.max(2, s * 0.14)); }
+  }
+
+  // Yo dibujo un hongo saltarín: tallo claro y sombrero violeta con lunares que se aplasta al rebotar.
+  drawMushroom(c, x, y, s, t, time) {
+    c.fillStyle = BRAND.bone;
+    c.fillRect(x + s * 0.34, y + s * 0.45, s * 0.32, s * 0.55);
+    const squash = 1 - t * 0.3, cy = y + s * (0.5 + t * 0.12);
+    c.fillStyle = '#B45CFF';
+    c.beginPath(); c.ellipse(x + s / 2, cy, s * 0.52 / squash, s * 0.5 * squash, 0, Math.PI, 0); c.closePath(); c.fill();
+    c.fillStyle = `rgba(255,255,255,${0.75 + Math.sin(time * 3 + x) * 0.15})`;
+    for (const [dx, dy, r] of [[0.3, 0.32, 0.08], [0.6, 0.22, 0.1], [0.75, 0.4, 0.06]]) {
+      c.beginPath(); c.arc(x + s * dx, cy - s * (0.5 - dy) * squash, s * r, 0, Math.PI * 2); c.fill();
+    }
+  }
+
+  // Yo dibujo una telaraña: hilos radiales y anillos tenues (va en la capa estática).
+  drawWeb(c, x, y, s) {
+    c.strokeStyle = 'rgba(235,240,255,.24)';
+    c.lineWidth = Math.max(1, s * 0.04);
+    c.beginPath();
+    c.moveTo(x, y); c.lineTo(x + s, y + s); c.moveTo(x + s, y); c.lineTo(x, y + s);
+    c.moveTo(x + s / 2, y); c.lineTo(x + s / 2, y + s); c.moveTo(x, y + s / 2); c.lineTo(x + s, y + s / 2);
+    c.stroke();
+    c.beginPath(); c.arc(x + s / 2, y + s / 2, s * 0.28, 0, Math.PI * 2); c.stroke();
   }
 
   // Yo dibujo un pincho con rotación (0 arriba, 1 derecha, 2 abajo, 3 izquierda).
@@ -221,6 +277,7 @@ export class Renderer {
     // Yo dibujo los resortes.
     for (const b of map.bounces) {
       const x = cam.sx(b.x), y = cam.sy(b.y);
+      if (b.mushroom) { this.drawMushroom(ctx, x, y, tile, b.t, time); continue; }
       this.drawStone(ctx, x, y, tile, game.theme);
       const lift = b.t * tile * 0.35;
       ctx.strokeStyle = BRAND.bone;
@@ -342,6 +399,20 @@ export class Renderer {
       ctx.beginPath(); ctx.moveTo(x + tile * 0.32, y); ctx.lineTo(x + tile * 0.48, y); ctx.lineTo(x + tile * 0.5, y + tile * 0.7); ctx.closePath(); ctx.fill();
     }
 
+    // Yo dibujo los cristales: apagados se ven tenues, encendidos brillan y laten.
+    for (const k of map.crystals) {
+      const cx = cam.sx(k.x + 0.5), cy = cam.sy(k.y + 0.5);
+      const glow = k.lit ? 0.8 + Math.sin(time * 3 + k.x) * 0.2 : 0.35;
+      ctx.fillStyle = `rgba(110,255,230,${glow * 0.3})`;
+      ctx.beginPath(); ctx.arc(cx, cy, tile * (k.lit ? 0.8 : 0.5), 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = k.lit ? '#B9FFF4' : '#5C8C95';
+      for (const [dx, h, w] of [[-0.18, 0.5, 0.16], [0.04, 0.7, 0.2], [0.24, 0.42, 0.14]]) {
+        ctx.beginPath();
+        ctx.moveTo(cx + dx * tile - w * tile, cy + tile * 0.4); ctx.lineTo(cx + dx * tile, cy + tile * (0.4 - h)); ctx.lineTo(cx + dx * tile + w * tile, cy + tile * 0.4);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+
     // Yo dibujo las sierras girando.
     for (const s of map.saws) {
       const cx = cam.sx(s.x + 0.5), cy = cam.sy(s.y + 0.5);
@@ -395,6 +466,9 @@ export class Renderer {
 
     // Yo dibujo las partículas encima de todo.
     game.particles.draw(ctx, cam);
+
+    // Yo oscurezco las cuevas sin luz: solo se ve alrededor de Blipo, de los cristales encendidos y de la salida.
+    if (game.level.dark) this.drawDarkness(game);
 
     // Yo aplico un destello de pantalla al morir o completar.
     if (game.flash > 0) {

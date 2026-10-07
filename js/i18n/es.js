@@ -130,6 +130,23 @@ export default {
   hint_wind: 'El viento te empuja y las corrientes te elevan. Déjate llevar.',
   hint_gusts: 'Las ráfagas van y vienen: los copos avisan antes de soplar.',
 
+  // Yo defino los nombres de los niveles de las Cavernas.
+  l_hollow: 'La gruta',
+  l_roots: 'Raíces',
+  l_webs: 'Telarañas',
+  l_silk: 'Seda',
+  l_gloom: 'Penumbra',
+  l_glow: 'Destellos',
+  l_well: 'El pozo',
+  l_tunnels: 'Túneles',
+  l_dark_maze: 'Laberinto oscuro',
+  l_spores: 'Esporas',
+  l_abyss: 'El abismo',
+  l_cave_heart: 'Corazón de la caverna',
+  hint_mushroom: 'Los hongos te hacen rebotar. ¡Combínalos con el doble salto!',
+  hint_web: 'Las telarañas frenan tu caída. Toca saltar para trepar por ellas.',
+  hint_dark: 'Está oscuro: toca los cristales para iluminar la cueva.',
+
   // Yo defino los nombres de las skins.
   skin_blipo: 'Blipo',
   skin_flama: 'Flama',

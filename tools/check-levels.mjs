@@ -36,7 +36,7 @@ function cloneMap(m) {
 }
 
 // Yo copio al jugador campo por campo (mucho más rápido que Object.assign) y reconecto su plataforma.
-const PLAYER_FIELDS = ['w', 'h', 'x', 'y', 'vx', 'vy', 'onGround', 'airJumps', 'coyote', 'buffer', 'lockX', 'cut', 'facing', 'wallDir', 'sliding', 'sqX', 'sqY', 'alive', 'lastCol', 'carryX', 'windX', 'onIce', 'crushed'];
+const PLAYER_FIELDS = ['w', 'h', 'x', 'y', 'vx', 'vy', 'onGround', 'airJumps', 'coyote', 'buffer', 'lockX', 'cut', 'facing', 'wallDir', 'sliding', 'sqX', 'sqY', 'alive', 'lastCol', 'carryX', 'windX', 'onIce', 'inWeb', 'crushed'];
 function clonePlayer(p, oldMap, newMap) {
   const c = Object.create(Player.prototype);
   for (const f of PLAYER_FIELDS) c[f] = p[f];
@@ -63,7 +63,7 @@ function step(node, action) {
       if (type !== 'ground') return;
       for (const t of data) {
         const ch = map.get(t.x, t.y);
-        if (ch === T.BOUNCE) { p.launch(PHYS.BOUNCE_VEL); break; }
+        if (ch === T.BOUNCE || ch === T.MUSHROOM) { p.launch(ch === T.MUSHROOM ? PHYS.MUSHROOM_VEL : PHYS.BOUNCE_VEL); break; }
         if (ch === T.CRUMBLE) map.triggerCrumble(t.x, t.y);
       }
     });
@@ -129,6 +129,8 @@ function distanceField(map, targets) {
   // Yo marco dónde se puede pisar (bloques y recorridos de plataformas móviles).
   const support = new Uint8Array(cols * rows);
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) if (blocked(x, y) || map.get(x, y) === T.CRUMBLE) support[y * cols + x] = 1;
+  // Yo trato las telarañas como apoyo: se escalan a toques.
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) if (map.get(x, y) === T.WEB) support[y * cols + x] = 1;
   // Yo trato las corrientes de aire como apoyo: suben a Blipo.
   for (const w of map.winds) {
     if (w.dir !== 'up') continue;
