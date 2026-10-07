@@ -27,6 +27,12 @@ export const T = Object.freeze({
   WEB: 'W',          // Yo marco una telaraña: frena la caída y se escala tocando saltar.
   MUSHROOM: 'M',     // Yo marco un hongo saltarín (rebota más bajo que el resorte).
   CRYSTAL: 'L',      // Yo marco un cristal que ilumina la cueva cuando Blipo lo toca.
+  ORB: 'G',          // Yo marco un orbe que invierte la gravedad de Blipo.
+  SWITCH: 'Q',       // Yo marco un interruptor que alterna los bloques 'A' y 'a'.
+  SWITCH_ON: 'A',    // Yo marco un bloque que es sólido con el interruptor encendido (estado inicial).
+  SWITCH_OFF: 'a',   // Yo marco un bloque que es sólido con el interruptor apagado.
+  PHASE_A: 'T',      // Yo marco un bloque de ritmo (fase A, empieza sólido).
+  PHASE_B: 't',      // Yo marco un bloque de ritmo (fase B, empieza fantasma).
 });
 
 // Yo defino qué tiles bloquean el paso siempre.
@@ -70,6 +76,15 @@ export const WIND = Object.freeze({
   LIFT_MAX: 9,       // Yo limito la velocidad de subida en las corrientes.
   WARN: 0.5,         // Yo levanto copos de aviso antes de cada ráfaga.
 });
+
+// Yo defino el ritmo de los bloques que aparecen y desaparecen solos.
+export const PHASE = Object.freeze({
+  PERIOD: 3,         // Yo cambio de fase cada 1.5 segundos (ciclo completo de 3).
+  WARN: 0.45,        // Yo parpadeo antes de cambiar para avisar.
+});
+
+// Yo devuelvo si la fase A está activa en un instante.
+export const phaseAOn = (time) => (((time % PHASE.PERIOD) + PHASE.PERIOD) % PHASE.PERIOD) < PHASE.PERIOD / 2;
 
 // Yo devuelvo la fase de una boquilla: 'off', 'warn' u 'on'.
 export function jetPhase(ch, time) {

@@ -131,6 +131,8 @@ export class AudioManager {
       case 'chime':
         [1318, 1760, 2637].forEach((f, i) => this.tone({ type: 'sine', f0: f, dur: 0.3, vol: 0.08, delay: i * 0.05 }));
         break;
+      case 'flip': this.tone({ type: 'triangle', f0: 900, f1: 300, dur: 0.22, vol: 0.12 }); this.tone({ type: 'sine', f0: 300, f1: 900, dur: 0.22, vol: 0.08, delay: 0.05 }); break;
+      case 'switch': this.tone({ type: 'square', f0: 520, dur: 0.05, vol: 0.08 }); this.tone({ type: 'square', f0: 780, dur: 0.08, vol: 0.08, delay: 0.06 }); break;
       case 'crack': this.tone({ type: 'square', f0: 1800, f1: 900, dur: 0.06, vol: 0.05 }); break;
       case 'shatter':
         this.burst({ dur: 0.18, vol: 0.12, freq: 4200, type: 'highpass' });

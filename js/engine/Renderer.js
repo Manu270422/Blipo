@@ -413,6 +413,53 @@ export class Renderer {
       }
     }
 
+    // Yo dibujo los bloques del interruptor ('A' rosa, 'a' turquesa) y los de ritmo ('T' violeta, 't' oro).
+    const phaseWarn = map.phases.length && ((map.time % 3) + 3) % 3 % 1.5 > 1.5 - 0.45;
+    const blocks = (list, solidOf, colorOf, blink) => {
+      for (const b of list) {
+        const x = cam.sx(b.x), y = cam.sy(b.y), solid = solidOf(b), col = colorOf(b);
+        if (solid) {
+          ctx.globalAlpha = blink && Math.sin(time * 40) > 0 ? 0.55 : 1;
+          ctx.fillStyle = col; ctx.fillRect(x, y, tile, tile);
+          ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fillRect(x, y, tile, tile * 0.16);
+          ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(x, y + tile * 0.84, tile, tile * 0.16);
+          ctx.globalAlpha = 1;
+        } else {
+          ctx.strokeStyle = col; ctx.globalAlpha = blink && Math.sin(time * 40) > 0 ? 0.9 : 0.45;
+          ctx.lineWidth = Math.max(1, tile * 0.06);
+          ctx.setLineDash([tile * 0.18, tile * 0.12]); ctx.strokeRect(x + tile * 0.08, y + tile * 0.08, tile * 0.84, tile * 0.84); ctx.setLineDash([]);
+          ctx.globalAlpha = 1;
+        }
+      }
+    };
+    blocks(map.toggles, (b) => (b.on ? map.switchOn : !map.switchOn), (b) => (b.on ? '#FF4FD8' : BRAND.teal), false);
+    blocks(map.phases, (b) => (b.a ? map.phaseA : !map.phaseA), (b) => (b.a ? '#9B6BFF' : BRAND.gold), phaseWarn);
+
+    // Yo dibujo los interruptores: una palanca que muestra el color de los bloques sólidos.
+    for (const s of map.switches) {
+      const x = cam.sx(s.x), y = cam.sy(s.y);
+      ctx.fillStyle = '#3A3F52'; ctx.fillRect(x + tile * 0.15, y + tile * 0.7, tile * 0.7, tile * 0.3);
+      ctx.strokeStyle = BRAND.bone; ctx.lineWidth = Math.max(2, tile * 0.1);
+      const ang = map.switchOn ? -0.6 : 0.6;
+      ctx.beginPath(); ctx.moveTo(x + tile / 2, y + tile * 0.75); ctx.lineTo(x + tile / 2 + Math.sin(ang) * tile * 0.45, y + tile * 0.75 - Math.cos(ang) * tile * 0.45); ctx.stroke();
+      ctx.fillStyle = map.switchOn ? '#FF4FD8' : BRAND.teal;
+      ctx.beginPath(); ctx.arc(x + tile / 2 + Math.sin(ang) * tile * 0.45, y + tile * 0.75 - Math.cos(ang) * tile * 0.45, tile * 0.14, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Yo dibujo los orbes de gravedad: anillo que gira con flechas hacia arriba y abajo.
+    for (const o of map.orbs) {
+      const cx = cam.sx(o.x + 0.5), cy = cam.sy(o.y + 0.5) + Math.sin(time * 2.5 + o.x) * tile * 0.06;
+      const a = o.armed ? 1 : 0.35;
+      ctx.fillStyle = `rgba(195,166,255,${0.25 * a})`;
+      ctx.beginPath(); ctx.arc(cx, cy, tile * 0.55, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = `rgba(195,166,255,${a})`; ctx.lineWidth = Math.max(1.5, tile * 0.07);
+      ctx.beginPath(); ctx.arc(cx, cy, tile * 0.36, time * 2, time * 2 + Math.PI * 1.4); ctx.stroke();
+      ctx.fillStyle = `rgba(255,255,255,${a})`;
+      for (const d of [-1, 1]) {
+        ctx.beginPath(); ctx.moveTo(cx, cy + d * tile * 0.26); ctx.lineTo(cx - tile * 0.1, cy + d * tile * 0.08); ctx.lineTo(cx + tile * 0.1, cy + d * tile * 0.08); ctx.closePath(); ctx.fill();
+      }
+    }
+
     // Yo dibujo las sierras girando.
     for (const s of map.saws) {
       const cx = cam.sx(s.x + 0.5), cy = cam.sy(s.y + 0.5);
@@ -461,7 +508,13 @@ export class Renderer {
     // Yo dibujo al jugador si está vivo.
     const p = game.player;
     if (p && p.alive) {
-      drawPlayer(ctx, game.skin, p, cam.sx(p.x + p.w / 2), cam.sy(p.y + p.h), tile, time);
+      // Yo dibujo a Blipo de cabeza cuando la gravedad está invertida (espejo vertical sobre su centro).
+      if (p.g < 0) {
+        const cy = cam.sy(p.y + p.h / 2);
+        ctx.save(); ctx.translate(0, cy * 2); ctx.scale(1, -1);
+        drawPlayer(ctx, game.skin, p, cam.sx(p.x + p.w / 2), cam.sy(p.y + p.h), tile, time);
+        ctx.restore();
+      } else drawPlayer(ctx, game.skin, p, cam.sx(p.x + p.w / 2), cam.sy(p.y + p.h), tile, time);
     }
 
     // Yo dibujo las partículas encima de todo.

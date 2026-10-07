@@ -37,7 +37,7 @@ export class Game {
     this.theme = makeTheme(level.hue ?? 205, highContrast);
     this.player = new Player(this.map.start.x, this.map.start.y);
     this.player.blinkSeed = Math.random() * 4;
-    this.respawnPoint = { ...this.map.start };
+    this.respawnPoint = { ...this.map.start, g: 1, switchOn: true };
     this.time = 0;
     this.deaths = 0;
     this.lives = lives;
@@ -155,7 +155,8 @@ export class Game {
       if (!k.active && Math.abs(k.x + 0.5 - cx) < 0.7 && Math.abs(k.y + 0.5 - cy) < 0.9) {
         this.map.checkpoints.forEach((o) => { o.active = false; });
         k.active = true;
-        this.respawnPoint = { x: k.x, y: k.y };
+        // Yo guardo también la gravedad y el interruptor para reaparecer igual que al tocar la bandera.
+        this.respawnPoint = { x: k.x, y: k.y, g: p.g, switchOn: this.map.switchOn };
         this.burst(k.x + 0.5, k.y + 0.3, '#FFC23D', 12);
         this.audio.sfx('checkpoint');
         bus.emit('toast', { key: 'toast_checkpoint' });
@@ -195,6 +196,16 @@ export class Game {
         this.audio.sfx('walljump');
         this.dust(data.dir > 0 ? p.x + p.w : p.x, p.cy, 6);
         bus.emit('stat', { key: 'wallJumps' });
+        break;
+      case 'flip':
+        this.audio.sfx('flip');
+        this.particles.emit(p.cx, p.cy, { count: 16, color: '#C3A6FF', speed: 5, life: 0.45, gravity: 0, size: 0.13 });
+        this.haptics.pulse(15);
+        break;
+      case 'switch':
+        this.audio.sfx('switch');
+        this.camera.shake(0.08);
+        this.haptics.pulse(20);
         break;
       case 'land':
         if (data.impact > 6) { this.audio.sfx('land'); this.dust(p.cx, p.y + p.h, Math.round(data.impact / 2)); }
@@ -245,8 +256,8 @@ export class Game {
 
   // Yo reaparezco en el último punto de control.
   respawn() {
-    this.player.spawn(this.respawnPoint.x, this.respawnPoint.y);
-    this.map.resetDynamic();
+    this.player.spawn(this.respawnPoint.x, this.respawnPoint.y, this.respawnPoint.g);
+    this.map.resetDynamic(this.respawnPoint.switchOn);
     this.state = 'playing';
     this.input.clear();
     this.burst(this.player.cx, this.player.cy, resolveColor(this.skin.trail, this.clock), 10, 3);
