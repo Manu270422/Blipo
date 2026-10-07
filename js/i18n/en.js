@@ -147,6 +147,23 @@ export default {
   hint_web: 'Webs slow your fall. Tap jump to climb through them.',
   hint_dark: 'It is dark: touch the crystals to light up the cave.',
 
+  // Yo defino los nombres de los niveles del Vacío.
+  l_flip: 'Upside down',
+  l_mirror: 'Mirror',
+  l_switch: 'The switch',
+  l_tempo: 'Tempo',
+  l_ceiling: 'Ceiling walk',
+  l_two_keys: 'Two keys',
+  l_orbit: 'Orbit',
+  l_station: 'Station',
+  l_vortex: 'Vortex',
+  l_pulse: 'Pulse',
+  l_void_maze: 'Void maze',
+  l_void_heart: 'Void heart',
+  hint_gravity: 'Orbs flip gravity: you will fall toward the ceiling. Touch another to flip back.',
+  hint_switch: 'Switches swap the pink and teal blocks.',
+  hint_phase: 'Rhythm blocks take turns on their own and blink before they change.',
+
   // Yo defino los nombres de las skins.
   skin_blipo: 'Blipo',
   skin_flama: 'Flame',

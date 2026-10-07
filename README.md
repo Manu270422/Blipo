@@ -9,7 +9,7 @@
 [![Jugar ahora](https://img.shields.io/badge/▶_JUGAR_AHORA-blipo.elmundodemanu.com-2DE1C2?style=for-the-badge&labelColor=1A1433)](https://blipo.elmundodemanu.com)
 
 <a href="https://blipo.elmundodemanu.com">
-  <img src="https://readme-typing-svg.demolab.com?font=Lilita+One&size=22&duration=2600&pause=900&color=2DE1C2&center=true&vCenter=true&width=560&lines=Plataformas+de+precisión.+Saltos+instantáneos.;52+niveles+en+5+mundos.;Reto+diario%2C+racha+de+fuego+%F0%9F%94%A5+y+supervivencia.;Sin+frameworks.+HTML+%2B+CSS+%2B+JavaScript+puro." alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Lilita+One&size=22&duration=2600&pause=900&color=2DE1C2&center=true&vCenter=true&width=560&lines=Plataformas+de+precisión.+Saltos+instantáneos.;54+niveles+en+5+mundos.;Reto+diario%2C+racha+de+fuego+%F0%9F%94%A5+y+supervivencia.;Sin+frameworks.+HTML+%2B+CSS+%2B+JavaScript+puro." alt="Typing SVG" />
 </a>
 
 [![Licencia](https://img.shields.io/badge/licencia-privada-FF5D4A?style=flat-square)](#-licencia)
@@ -39,7 +39,7 @@ Corre en el navegador, se instala como **PWA**, funciona **offline** y se empaqu
 
 | 🕹️ Precisión | 🌍 5 mundos | 📅 Reto diario | ♾️ Supervivencia | 🎨 9 skins |
 |:---:|:---:|:---:|:---:|:---:|
-| Doble salto | 52 niveles | Racha 🔥 | 5 vidas | Chispas |
+| Doble salto | 54 niveles | Racha 🔥 | 5 vidas | Chispas |
 
 </div>
 
@@ -66,7 +66,8 @@ Corre en el navegador, se instala como **PWA**, funciona **offline** y se empaqu
 <td width="50%" valign="top">
 
 **🧩 Contenido**
-- 52 niveles en 5 mundos: 42 diseñados a mano (Cantera, Cavernas, Fundición y Glaciar) + 10 generados con semilla fija
+- 54 niveles en 5 mundos, todos diseñados a mano y verificados con `npm run check:levels`
+- Vacío con mecánicas propias: orbes que invierten la gravedad, interruptores que alternan bloques y bloques de ritmo
 - Cavernas con mecánicas propias: hongos saltarines, telarañas que frenan la caída y cuevas oscuras con cristales que iluminan
 - Fundición con mecánicas propias: cintas transportadoras, llamaradas con ritmo y plataformas móviles
 - Glaciar con mecánicas propias: hielo resbaloso, carámbanos que caen, viento lateral, ráfagas y corrientes que elevan
@@ -138,7 +139,7 @@ npm run cap:open    # abre el proyecto en Android Studio
 | 🌿 Cavernas | Verde musgo · hongos, telarañas y oscuridad | 10 |
 | 🔥 Fundición | Naranja óxido · cintas, llamaradas y plataformas móviles | 35 |
 | ❄️ Glaciar | Celeste hielo · hielo resbaloso, carámbanos y viento | 65 |
-| 🌌 Vacío | Violeta | 95 |
+| 🌌 Vacío | Violeta · gravedad invertida, interruptores y bloques de ritmo | 95 |
 
 ---
 
