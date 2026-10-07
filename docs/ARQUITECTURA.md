@@ -18,15 +18,15 @@ blipo/
 │   ├── app/                App (orquestador), Session (modos), Pwa, Share
 │   ├── core/               EventBus, Loop (120 Hz fijo), Storage, I18n, Random, Format
 │   ├── systems/            Input (teclado/táctil/mando), Audio (sintetizado), Haptics
-│   ├── engine/             TileMap, Physics, Camera, Particles, Renderer
-│   ├── entities/           Player (coyote time, buffer, doble salto, wall jump), Skins
-│   ├── levels/             tiles, campaign (niveles originales), generator (procedural), worlds
+│   ├── engine/             TileMap, Physics, Camera, Particles, Renderer, Backdrop (fondo con paralaje)
+│   ├── entities/           Player (coyote time, buffer, doble salto, wall jump), Mover (plataforma móvil), Skins
+│   ├── levels/             tiles, campaign (Cantera), foundry (Fundición), generator (procedural), worlds
 │   ├── game/               Game (partida), Progress, Achievements, Daily
 │   ├── ui/                 ScreenManager, Hud, TouchControls, Toast, Dialog, Mascot
 │   │   └── views/          Una vista por pantalla
 │   └── i18n/               es.js, en.js
 ├── assets/fonts|icons|store
-├── tools/                  brand.html (íconos) y build-web.mjs (copia a /www)
+├── tools/                  brand.html (íconos), build-web.mjs (copia a /www) y check-levels.mjs (verificador de niveles)
 └── docs/
 ```
 
@@ -38,7 +38,8 @@ blipo/
 5. `Storage` guarda en `localStorage` con escritura diferida y `flush()` al salir o pasar a segundo plano.
 
 ## Cómo agregar…
-- **Un nivel a mano:** añade un objeto en `js/levels/campaign.js` (mapa 40×22 con los caracteres de `tiles.js`) y su nombre en `i18n`.
+- **Un nivel a mano:** añade un objeto en `js/levels/campaign.js` o `js/levels/foundry.js` con los caracteres de `tiles.js` y su nombre en `i18n`. El mapa puede medir más de 40×22: la cámara mantiene la escala estándar y lo recorre. Opcional: `movers` (plataformas móviles `{ x, y, w, dx, dy, period, phase }`) y `hint` (llave de un aviso que explica la mecánica).
+- **Verificar niveles:** `npm run check:levels` (o `node tools/check-levels.mjs <mundo> <nivel>`) juega cada nivel hecho a mano con la física real y confirma que tiene salida y que las 3 gemas se pueden recoger.
 - **Un mundo:** agrega una entrada en `WORLDS` (`js/levels/worlds.js`) y su llave de texto.
 - **Una skin:** agrega en `SKINS` (`js/entities/Skins.js`) y `skin_<id>` en `i18n`.
 - **Un logro:** agrega en `ACHIEVEMENTS` con `goal` y `value()`, y sus textos `ach_<id>` / `ach_<id>_d`.

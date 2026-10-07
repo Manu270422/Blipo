@@ -92,6 +92,26 @@ export default {
   l_maze: 'Laberinto',
   l_floor: 'Suelo de lava',
 
+  // Yo defino los nombres de los niveles de la Fundición.
+  l_belts: 'Cintas',
+  l_uphill: 'Cuesta arriba',
+  l_flames: 'Llamaradas',
+  l_smelter: 'El horno',
+  l_rails: 'Rieles',
+  l_lift: 'El elevador',
+  l_crossing: 'El cruce',
+  l_assembly: 'Línea de montaje',
+  l_chimney: 'La chimenea',
+  l_rhythm: 'A ritmo',
+  l_sawmill: 'Aserradero',
+  l_core: 'Corazón de la fundición',
+
+  // Yo explico cada mecánica nueva la primera vez que aparece.
+  hint_belts: 'Las cintas te arrastran: úsalas para saltar más lejos.',
+  hint_flames: 'Las boquillas echan chispas antes de encenderse. ¡Espera tu momento!',
+  hint_movers: 'Súbete a las plataformas móviles: te llevan consigo.',
+  hint_rhythm: 'Las llamas se turnan. Sigue el ritmo y avanza.',
+
   // Yo defino los nombres de las skins.
   skin_blipo: 'Blipo',
   skin_flama: 'Flama',

@@ -1,15 +1,17 @@
 // Yo organizo la campaña en mundos y resuelvo cualquier nivel (campaña, diario o supervivencia).
 import { CAMPAIGN } from './campaign.js';
+import { FOUNDRY } from './foundry.js';
 import { generateLevel } from './generator.js';
 import { hashString } from '../core/Random.js';
 
 // Yo defino cada mundo: color, música, dificultad y estrellas necesarias para abrirlo.
+// Yo marco con "levels" los mundos hechos a mano y con "diff" los generados con semilla fija.
 export const WORLDS = [
-  { id: 0, key: 'w_quarry', hue: 205, music: 'w0', unlock: 0, count: CAMPAIGN.length, source: 'campaign' },
-  { id: 1, key: 'w_caves', hue: 150, music: 'w1', unlock: 10, count: 10, source: 'gen', diff: [0.08, 0.35] },
-  { id: 2, key: 'w_foundry', hue: 18, music: 'w2', unlock: 35, count: 10, source: 'gen', diff: [0.3, 0.58] },
-  { id: 3, key: 'w_glacier', hue: 190, music: 'w3', unlock: 65, count: 10, source: 'gen', diff: [0.5, 0.8] },
-  { id: 4, key: 'w_void', hue: 280, music: 'w4', unlock: 95, count: 10, source: 'gen', diff: [0.72, 1] },
+  { id: 0, key: 'w_quarry', hue: 205, style: 'quarry', music: 'w0', unlock: 0, count: CAMPAIGN.length, source: 'hand', levels: CAMPAIGN },
+  { id: 1, key: 'w_caves', hue: 150, style: 'caves', music: 'w1', unlock: 10, count: 10, source: 'gen', diff: [0.08, 0.35] },
+  { id: 2, key: 'w_foundry', hue: 18, style: 'foundry', music: 'w2', unlock: 35, count: FOUNDRY.length, source: 'hand', levels: FOUNDRY },
+  { id: 3, key: 'w_glacier', hue: 190, style: 'glacier', music: 'w3', unlock: 65, count: 10, source: 'gen', diff: [0.5, 0.8] },
+  { id: 4, key: 'w_void', hue: 280, style: 'void', music: 'w4', unlock: 95, count: 10, source: 'gen', diff: [0.72, 1] },
 ];
 
 // Yo genero la llave única de un nivel de campaña.
@@ -18,15 +20,15 @@ export const levelKey = (w, l) => `w${w}-l${l}`;
 // Yo devuelvo la definición completa de un nivel de campaña.
 export function getCampaignLevel(w, l) {
   const world = WORLDS[w];
-  if (world.source === 'campaign') {
-    const def = CAMPAIGN[l];
-    return { ...def, id: levelKey(w, l), world: w, index: l, hue: world.hue, music: world.music };
+  if (world.source === 'hand') {
+    const def = world.levels[l];
+    return { ...def, id: levelKey(w, l), world: w, index: l, hue: world.hue, style: world.style, music: world.music };
   }
   // Yo interpolo la dificultad dentro del mundo.
   const t = world.count > 1 ? l / (world.count - 1) : 0;
   const diff = world.diff[0] + (world.diff[1] - world.diff[0]) * t;
   const def = generateLevel(7919 * (w + 1) + 104729 * (l + 1), diff);
-  return { ...def, id: levelKey(w, l), world: w, index: l, hue: world.hue + l * 4, music: world.music };
+  return { ...def, id: levelKey(w, l), world: w, index: l, hue: world.hue + l * 4, style: world.style, music: world.music };
 }
 
 // Yo devuelvo el nivel del reto diario (igual para todos los jugadores ese día).
