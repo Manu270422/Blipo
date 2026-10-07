@@ -1,6 +1,7 @@
 // Yo controlo el ciclo de una partida en cualquier modo: campaña, reto diario o supervivencia.
 import { GAME } from '../config.js';
 import { t } from '../core/I18n.js';
+import { bus } from '../core/EventBus.js';
 import { formatTime } from '../core/Format.js';
 import { WORLDS, getCampaignLevel, getDailyLevel, getSurvivalLevel } from '../levels/worlds.js';
 import { dateKey, dailyNumber } from '../game/Daily.js';
@@ -81,6 +82,8 @@ export class Session {
     app.hud.showTimer(s.showTimer);
     this.game.load(level, { skin: getSkin(this.storage.data.skins.equipped), highContrast: s.highContrast, lives });
     app.audio.playMusic(level.music || 'w0');
+    // Yo explico la mecánica nueva del nivel con un aviso corto.
+    if (level.hint) bus.emit('toast', { key: level.hint, icon: 'i-spark' });
     // Yo espero un cuadro para medir el HUD ya visible y ajustar la cámara.
     requestAnimationFrame(() => app.layout());
     app.updateRotateHint();

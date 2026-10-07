@@ -1,5 +1,6 @@
 // Yo calculo el tamaño del tile según la pantalla y sigo al jugador cuando el nivel no cabe.
 import { clamp, lerp } from '../core/Format.js';
+import { GRID } from '../config.js';
 
 // Yo defino el mínimo de columnas visibles cuando hago zoom (pantallas verticales).
 const MIN_VISIBLE_COLS = 21;
@@ -22,10 +23,12 @@ export class Camera {
     this.insets = insets;
     // Yo reservo espacio para el HUD superior.
     const usableH = viewH - insets.top - insets.bottom;
-    // Yo intento que el nivel completo quepa en pantalla.
-    const fit = Math.min(viewW / cols, usableH / rows);
+    // Yo mido con la grilla estándar como máximo: un mapa grande se ve a la misma escala y se desplaza.
+    const refCols = Math.min(cols, GRID.COLS), refRows = Math.min(rows, GRID.ROWS);
+    // Yo intento que el nivel completo (o su ventana estándar) quepa en pantalla.
+    const fit = Math.min(viewW / refCols, usableH / refRows);
     // Yo decido si hace falta zoom: si el tile queda muy pequeño, sigo al jugador.
-    const zoomTile = Math.min(usableH / rows, viewW / MIN_VISIBLE_COLS);
+    const zoomTile = Math.min(usableH / refRows, viewW / MIN_VISIBLE_COLS);
     this.tile = Math.floor((fit < 17 ? Math.max(fit, zoomTile) : fit) * 100) / 100;
     this.worldW = cols * this.tile;
     this.worldH = rows * this.tile;

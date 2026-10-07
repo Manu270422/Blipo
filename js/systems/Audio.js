@@ -127,6 +127,7 @@ export class AudioManager {
         break;
       case 'portal': this.tone({ type: 'sine', f0: 180, f1: 1400, dur: 0.32, vol: 0.14 }); break;
       case 'bounce': this.tone({ type: 'sine', f0: 160, f1: 780, dur: 0.18, vol: 0.2 }); break;
+      case 'flame': this.burst({ dur: 0.35, vol: 0.07, freq: 420, type: 'lowpass' }); break;
       case 'crumble': this.burst({ dur: 0.22, vol: 0.14, freq: 700, type: 'bandpass' }); break;
       case 'checkpoint':
         this.tone({ type: 'triangle', f0: 523, dur: 0.1, vol: 0.14 });

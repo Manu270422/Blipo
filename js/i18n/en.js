@@ -92,6 +92,26 @@ export default {
   l_maze: 'Maze',
   l_floor: 'Lava floor',
 
+  // Yo defino los nombres de los niveles de la Fundición.
+  l_belts: 'Conveyors',
+  l_uphill: 'Uphill',
+  l_flames: 'Flare-ups',
+  l_smelter: 'The smelter',
+  l_rails: 'Rails',
+  l_lift: 'The lift',
+  l_crossing: 'The crossing',
+  l_assembly: 'Assembly line',
+  l_chimney: 'The chimney',
+  l_rhythm: 'On beat',
+  l_sawmill: 'Sawmill',
+  l_core: 'Foundry core',
+
+  // Yo explico cada mecánica nueva la primera vez que aparece.
+  hint_belts: 'Belts drag you along: ride them to jump farther.',
+  hint_flames: 'Nozzles spark before they ignite. Wait for your moment!',
+  hint_movers: 'Hop on moving platforms: they carry you along.',
+  hint_rhythm: 'The flames take turns. Follow the beat and go.',
+
   // Yo defino los nombres de las skins.
   skin_blipo: 'Blipo',
   skin_flama: 'Flame',

@@ -1,13 +1,14 @@
 // Yo convierto la definición de un nivel en una grilla consultable y extraigo sus objetos dinámicos.
 import { GRID, GAME } from '../config.js';
-import { T, SOLID, HAZARD_BOX, SAW_RADIUS } from '../levels/tiles.js';
+import { T, SOLID, HAZARD_BOX, SAW_RADIUS, BELT_DIR, JET, jetPhase } from '../levels/tiles.js';
+import { Mover } from '../entities/Mover.js';
 
 export class TileMap {
-  // Yo construyo el mapa a partir de { rows, start }.
+  // Yo construyo el mapa a partir de { rows, start, movers }.
   constructor(def) {
-    // Yo guardo dimensiones.
-    this.cols = GRID.COLS;
-    this.rows = GRID.ROWS;
+    // Yo tomo las dimensiones del propio mapa: así acepto niveles más grandes que la grilla estándar.
+    this.cols = Math.max(...def.rows.map((r) => r.length)) || GRID.COLS;
+    this.rows = def.rows.length || GRID.ROWS;
     // Yo copio las filas como matriz de caracteres para poder modificarla.
     this.grid = def.rows.map((r) => r.padEnd(this.cols, '.').slice(0, this.cols).split(''));
     // Yo preparo las colecciones de objetos dinámicos.
@@ -19,8 +20,14 @@ export class TileMap {
     this.crumbles = [];
     this.bounces = [];
     this.saws = [];
+    this.belts = [];
+    this.jets = [];
+    // Yo creo las plataformas móviles descritas en el nivel.
+    this.movers = (def.movers || []).map((m) => new Mover(m));
+    // Yo llevo el reloj del mapa para las trampas con ritmo.
+    this.time = 0;
     // Yo ubico el inicio definido en el nivel.
-    this.start = { x: def.start[0], y: def.start[1] };
+    this.start = def.start ? { x: def.start[0], y: def.start[1] } : { x: 1, y: 1 };
     // Yo recorro la grilla para extraer objetos.
     this.extract();
   }
@@ -40,6 +47,8 @@ export class TileMap {
           case T.CRUMBLE: this.crumbles.push({ x, y, state: 'solid', t: 0 }); break;
           case T.BOUNCE: this.bounces.push({ x, y, t: 0 }); break;
           case T.SAW: this.saws.push({ x, y }); break;
+          case T.BELT_LEFT: case T.BELT_RIGHT: this.belts.push({ x, y, dir: BELT_DIR[c] }); break;
+          case T.JET_A: case T.JET_B: this.jets.push({ x, y, ch: c }); break;
           default: break;
         }
       }
@@ -47,7 +56,17 @@ export class TileMap {
     // Yo indexo los bloques frágiles por posición para consultarlos rápido.
     this.crumbleAt = new Map(this.crumbles.map((c) => [c.y * this.cols + c.x, c]));
     this.bounceAt = new Map(this.bounces.map((b) => [b.y * this.cols + b.x, b]));
+    // Yo corto cada llamarada en el primer bloque sólido que encuentre por encima.
+    for (const j of this.jets) {
+      let reach = 0;
+      while (reach < JET.HEIGHT && !SOLID.has(this.get(j.x, j.y - 1 - Math.floor(reach)))) reach += 1;
+      j.reach = Math.min(JET.HEIGHT, reach);
+      j.phase = jetPhase(j.ch, 0);
+    }
   }
+
+  // Yo devuelvo hacia dónde arrastra la cinta de una celda (0 si no es cinta).
+  beltDir(x, y) { return BELT_DIR[this.get(x, y)] || 0; }
 
   // Yo devuelvo el carácter de una celda (fuera del mapa devuelvo vacío).
   get(x, y) {
@@ -86,6 +105,12 @@ export class TileMap {
       const ny = Math.max(box.y, Math.min(cy, box.y + box.h));
       if ((cx - nx) ** 2 + (cy - ny) ** 2 < SAW_RADIUS ** 2) return true;
     }
+    // Yo reviso las llamaradas encendidas.
+    for (const j of this.jets) {
+      if (j.phase !== 'on' || j.reach <= 0) continue;
+      const fx0 = j.x + 0.22, fx1 = j.x + 0.78, fy0 = j.y - j.reach, fy1 = j.y;
+      if (box.x < fx1 && box.x + box.w > fx0 && box.y < fy1 && box.y + box.h > fy0) return true;
+    }
     return false;
   }
 
@@ -94,6 +119,14 @@ export class TileMap {
 
   // Yo actualizo los bloques frágiles.
   update(dt, playerBox) {
+    // Yo avanzo el reloj, las plataformas móviles y las llamaradas.
+    this.time += dt;
+    for (const m of this.movers) m.update(this.time, dt);
+    for (const j of this.jets) {
+      const ph = jetPhase(j.ch, this.time);
+      j.ignited = ph === 'on' && j.phase !== 'on';
+      j.phase = ph;
+    }
     for (const c of this.crumbles) {
       if (c.state === 'shaking') {
         // Yo cuento hacia abajo y lo hago caer.

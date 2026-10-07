@@ -7,15 +7,16 @@ export function moveAndCollide(body, map, dt) {
   const res = { onGround: false, ceiling: false, wallL: false, wallR: false, groundTiles: [] };
 
   // ---- Eje X ----
-  // Yo aplico el desplazamiento horizontal.
-  body.x += body.vx * dt;
+  // Yo aplico el desplazamiento horizontal (sumo el arrastre de cintas o plataformas, si hay).
+  const vx = body.vx + (body.carryX || 0);
+  body.x += vx * dt;
   // Yo calculo las filas que ocupa el cuerpo.
   const ry0 = Math.floor(body.y + EPS), ry1 = Math.floor(body.y + body.h - EPS);
-  if (body.vx > 0) {
+  if (vx > 0) {
     // Yo reviso la columna del borde derecho.
     const cx = Math.floor(body.x + body.w - EPS);
     for (let y = ry0; y <= ry1; y++) if (map.isSolid(cx, y)) { body.x = cx - body.w; body.vx = 0; res.wallR = true; break; }
-  } else if (body.vx < 0) {
+  } else if (vx < 0) {
     // Yo reviso la columna del borde izquierdo.
     const cx = Math.floor(body.x + EPS);
     for (let y = ry0; y <= ry1; y++) if (map.isSolid(cx, y)) { body.x = cx + 1; body.vx = 0; res.wallL = true; break; }
@@ -55,4 +56,20 @@ export function moveAndCollide(body, map, dt) {
     for (let x = cx0; x <= cx1; x++) if (map.isSolid(x, fy) && Math.abs(body.y + body.h - fy) < 0.03) { res.onGround = true; res.groundTiles.push({ x, y: fy }); }
   }
   return res;
+}
+
+// Yo apoyo un cuerpo sobre las plataformas móviles; devuelvo la plataforma que lo sostiene (o null).
+export function landOnMovers(body, movers, prevBottom) {
+  if (!movers.length || body.vy < 0) return null;
+  const bottom = body.y + body.h;
+  for (const m of movers) {
+    if (!m.overlapsX(body)) continue;
+    // Yo acepto el aterrizaje si los pies venían por encima del borde superior (con margen por su movimiento).
+    if (prevBottom <= m.y - Math.min(0, m.my) + 0.05 && bottom >= m.y - 0.001) {
+      body.y = m.y - body.h;
+      body.vy = 0;
+      return m;
+    }
+  }
+  return null;
 }
