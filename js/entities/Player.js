@@ -56,6 +56,8 @@ export class Player {
     const g = this.g;
     // Yo muero aplastado si un bloque aparece encima de mí (interruptores y bloques de ritmo).
     if (map.overlapsSolid(this)) { this.crushed = true; return; }
+    // Yo recuerdo dónde estaba para saber si le caigo encima a un jefe.
+    const prevY = this.y;
     // Yo leo la dirección deseada.
     const dir = (input.right ? 1 : 0) - (input.left ? 1 : 0);
     // Yo registro el salto encolado en el buffer.
@@ -170,6 +172,14 @@ export class Player {
     }
     // Yo reporto los tiles pisados para resortes y bloques frágiles.
     if (this.onGround) emit('ground', col.groundTiles);
+
+    // ---- Jefe ----
+    // Yo reboto al caerle encima a un jefe aturdido y muero si lo toco de otra forma.
+    if (map.boss) {
+      const hit = map.boss.contact(this, prevY);
+      if (hit === 'stomp') { this.launch(PHYS.STOMP_VEL); emit('stomp', { defeated: map.boss.defeated }); }
+      else if (hit === 'hurt') this.crushed = true;
+    }
 
     // ---- Vacío ----
     // Yo invierto la gravedad al tocar un orbe y presiono los interruptores que atravieso.

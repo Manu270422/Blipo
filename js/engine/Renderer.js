@@ -2,6 +2,7 @@
 import { T, SOLID } from '../levels/tiles.js';
 import { drawPlayer, resolveColor } from '../entities/Skins.js';
 import { Backdrop } from './Backdrop.js';
+import { t } from '../core/I18n.js';
 
 // Yo limito el tamaño de la capa estática para no pasar el máximo de canvas de los móviles.
 const MAX_STATIC_PIXELS = 12e6;
@@ -37,6 +38,104 @@ export class Renderer {
     this.sctx = this.static.getContext('2d');
     this.dpr = 1;
     this.w = 0; this.h = 0;
+  }
+
+  // Yo dibujo al jefe según su tipo, sus proyectiles y su animación al ser derrotado.
+  drawBoss(ctx, game, b) {
+    const cam = game.camera, tile = cam.tile, time = game.clock;
+    // Yo pinto primero los proyectiles.
+    for (const s of b.projectiles(game.map)) {
+      const x = cam.sx(s.x), y = cam.sy(s.y), r = s.r * tile;
+      if (s.kind === 'icicle') {
+        ctx.fillStyle = '#C9F1FF'; ctx.save(); ctx.translate(x, y); ctx.rotate(s.dt * 6);
+        ctx.beginPath(); ctx.moveTo(0, -r * 1.3); ctx.lineTo(r * 0.6, r); ctx.lineTo(-r * 0.6, r); ctx.closePath(); ctx.fill(); ctx.restore();
+        continue;
+      }
+      const col = { rock: '#8C93AD', web: '#EEF2FF', fire: BRAND.gold, orb: '#C3A6FF' }[s.kind] || BRAND.bone;
+      if (s.kind === 'fire' || s.kind === 'orb') { ctx.fillStyle = s.kind === 'fire' ? 'rgba(255,93,74,.35)' : 'rgba(155,107,255,.35)'; ctx.beginPath(); ctx.arc(x, y, r * 1.8, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      if (s.kind === 'web') { ctx.strokeStyle = 'rgba(80,90,120,.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x - r, y); ctx.lineTo(x + r, y); ctx.moveTo(x, y - r); ctx.lineTo(x, y + r); ctx.stroke(); }
+    }
+    if (b.defeated && b.deadT > 1.2) return;
+    const x = cam.sx(b.x), y = cam.sy(b.y), w = b.w * tile, h = b.h * tile;
+    ctx.save();
+    // Yo me desvanezco girando al ser derrotado y parpadeo al recibir un golpe.
+    if (b.defeated) { const k = b.deadT / 1.2; ctx.globalAlpha = 1 - k; ctx.translate(x + w / 2, y + h / 2); ctx.rotate(k * 0.8); ctx.scale(1 - k * 0.4, 1 - k * 0.4); ctx.translate(-(x + w / 2), -(y + h / 2)); }
+    else if (b.hurtT > 0 && Math.sin(time * 50) > 0) ctx.globalAlpha = 0.4;
+    const dazed = b.vulnerable;
+    const eye = (ex, ey, r, color) => {
+      if (dazed) {
+        ctx.strokeStyle = color; ctx.lineWidth = Math.max(2, r * 0.5);
+        ctx.beginPath(); ctx.moveTo(ex - r, ey - r); ctx.lineTo(ex + r, ey + r); ctx.moveTo(ex + r, ey - r); ctx.lineTo(ex - r, ey + r); ctx.stroke();
+      } else { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(ex, ey, r, 0, Math.PI * 2); ctx.fill(); }
+    };
+    if (b.type === 'golem') {
+      this.drawStone(ctx, x, y, w, game.theme);
+      ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = Math.max(2, tile * 0.08);
+      ctx.beginPath(); ctx.moveTo(x + w * 0.2, y + h * 0.1); ctx.lineTo(x + w * 0.35, y + h * 0.4); ctx.lineTo(x + w * 0.25, y + h * 0.7); ctx.stroke();
+      eye(x + w * 0.35, y + h * 0.42, tile * 0.18, BRAND.gold); eye(x + w * 0.65, y + h * 0.42, tile * 0.18, BRAND.gold);
+      ctx.fillStyle = '#1A1433'; ctx.fillRect(x + w * 0.3, y + h * 0.65, w * 0.4, h * 0.08);
+    } else if (b.type === 'spider') {
+      ctx.strokeStyle = 'rgba(235,240,255,.5)'; ctx.lineWidth = Math.max(1, tile * 0.05);
+      ctx.beginPath(); ctx.moveTo(x + w / 2, cam.sy(0)); ctx.lineTo(x + w / 2, y); ctx.stroke();
+      ctx.strokeStyle = '#3B2350'; ctx.lineWidth = Math.max(2, tile * 0.12);
+      for (let i = 0; i < 4; i++) for (const d of [-1, 1]) {
+        const wig = Math.sin(time * 8 + i) * tile * 0.15 * (dazed ? 0.2 : 1);
+        ctx.beginPath(); ctx.moveTo(x + w / 2, y + h * (0.3 + i * 0.12)); ctx.lineTo(x + w / 2 + d * w * 0.55, y + h * (0.1 + i * 0.25) + wig); ctx.lineTo(x + w / 2 + d * w * 0.75, y + h * (0.6 + i * 0.2)); ctx.stroke();
+      }
+      ctx.fillStyle = '#5B2C7A'; ctx.beginPath(); ctx.ellipse(x + w / 2, y + h * 0.55, w * 0.38, h * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+      eye(x + w * 0.4, y + h * 0.45, tile * 0.12, '#FF4FD8'); eye(x + w * 0.6, y + h * 0.45, tile * 0.12, '#FF4FD8');
+    } else if (b.type === 'furnace') {
+      ctx.fillStyle = '#3A3F52'; ctx.fillRect(x, y, w, h);
+      ctx.fillStyle = '#4A4F66'; ctx.fillRect(x, y, w, h * 0.18);
+      const glow = dazed ? 0.75 + Math.sin(time * 12) * 0.25 : 0.45;
+      ctx.fillStyle = `rgba(255,${dazed ? 194 : 93},${dazed ? 61 : 74},${glow})`; ctx.fillRect(x + w * 0.15, y + h * 0.35, w * 0.7, h * 0.35);
+      ctx.fillStyle = '#1A1433'; for (let i = 0; i < 5; i++) ctx.fillRect(x + w * (0.18 + i * 0.14), y + h * 0.35, w * 0.04, h * 0.35);
+      ctx.fillStyle = BRAND.coral; ctx.fillRect(x, y + h * 0.85, w, h * 0.15);
+    } else if (b.type === 'yeti') {
+      ctx.fillStyle = '#EEF6FF'; ctx.beginPath(); ctx.ellipse(x + w / 2, y + h * 0.55, w * 0.5, h * 0.47, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#C9F1FF'; ctx.beginPath(); ctx.moveTo(x + w * 0.15, y + h * 0.2); ctx.lineTo(x + w * 0.05, y - h * 0.1); ctx.lineTo(x + w * 0.3, y + h * 0.12); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x + w * 0.85, y + h * 0.2); ctx.lineTo(x + w * 0.95, y - h * 0.1); ctx.lineTo(x + w * 0.7, y + h * 0.12); ctx.fill();
+      ctx.fillStyle = '#6FB8D6'; ctx.beginPath(); ctx.ellipse(x + w / 2, y + h * 0.45, w * 0.28, h * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+      eye(x + w * 0.4, y + h * 0.42, tile * 0.1, '#1A1433'); eye(x + w * 0.6, y + h * 0.42, tile * 0.1, '#1A1433');
+    } else if (b.type === 'eye') {
+      const cx = x + w / 2, cy = y + h / 2, p = game.player;
+      ctx.fillStyle = 'rgba(155,107,255,.3)'; ctx.beginPath(); ctx.arc(cx, cy, w * 0.62, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#F4EEDF'; ctx.beginPath(); ctx.arc(cx, cy, w * 0.48, 0, Math.PI * 2); ctx.fill();
+      // Yo sigo a Blipo con la pupila; aturdido, la pupila se encoge.
+      const ang = p ? Math.atan2(cam.sy(p.cy) - cy, cam.sx(p.cx) - cx) : 0;
+      const ix = cx + Math.cos(ang) * w * 0.16, iy = cy + Math.sin(ang) * w * 0.16;
+      ctx.fillStyle = '#6C3FD6'; ctx.beginPath(); ctx.arc(ix, iy, w * 0.24, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#10131F'; ctx.beginPath(); ctx.arc(ix, iy, w * (dazed ? 0.06 : 0.12), 0, Math.PI * 2); ctx.fill();
+      if (dazed) { ctx.strokeStyle = 'rgba(255,93,74,.7)'; ctx.lineWidth = 1.5; for (let i = 0; i < 6; i++) { const a = i * 1.05; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * w * 0.47, cy + Math.sin(a) * w * 0.47); ctx.lineTo(cx + Math.cos(a + 0.2) * w * 0.3, cy + Math.sin(a + 0.2) * w * 0.3); ctx.stroke(); } }
+    }
+    // Yo dibujo estrellitas girando cuando estoy aturdido (es el momento de caerme encima).
+    if (dazed && !b.defeated && b.hitKey !== b.segKey) {
+      ctx.fillStyle = BRAND.gold;
+      for (let i = 0; i < 3; i++) {
+        const a = time * 4 + (i * Math.PI * 2) / 3;
+        const sx = x + w / 2 + Math.cos(a) * w * 0.45, sy = y - tile * 0.35 + Math.sin(a) * tile * 0.15;
+        ctx.beginPath(); for (let k = 0; k < 10; k++) { const r = k % 2 ? tile * 0.07 : tile * 0.16, aa = (k * Math.PI) / 5; ctx.lineTo(sx + Math.cos(aa) * r, sy + Math.sin(aa) * r); } ctx.closePath(); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  // Yo dibujo el nombre del jefe y sus golpes restantes.
+  drawBossBar(ctx, game, b) {
+    // Yo me ubico abajo para no tapar los avisos ni el HUD de arriba.
+    const cam = game.camera, cx = this.w / 2, y = this.h - cam.insets.bottom - 64;
+    ctx.font = `20px "Lilita One", system-ui, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillStyle = 'rgba(16,13,31,.75)';
+    const label = t(b.def.name);
+    const tw = Math.max(160, ctx.measureText(label).width + 40);
+    ctx.fillRect(cx - tw / 2, y, tw, 52);
+    ctx.fillStyle = BRAND.bone; ctx.fillText(label, cx, y + 6);
+    for (let i = 0; i < b.maxHp; i++) {
+      ctx.fillStyle = i < b.hp ? BRAND.coral : 'rgba(255,255,255,.18)';
+      ctx.fillRect(cx - (b.maxHp * 26) / 2 + i * 26 + 3, y + 34, 20, 10);
+    }
   }
 
   // Yo pinto la capa de oscuridad y le recorto agujeros de luz con degradados.
@@ -460,6 +559,21 @@ export class Renderer {
       }
     }
 
+    // Yo dibujo la puerta de la arena: barrotes cerrados mientras el jefe viva.
+    if (map.boss) {
+      const open = map.boss.defeated;
+      for (let y = 0; y < map.rows; y++) for (let x = 0; x < map.cols; x++) {
+        if (map.grid[y][x] !== T.DOOR) continue;
+        const px = cam.sx(x), py = cam.sy(y);
+        if (open) { ctx.strokeStyle = 'rgba(255,194,61,.25)'; ctx.strokeRect(px + 1, py + 1, tile - 2, tile - 2); continue; }
+        ctx.fillStyle = '#2A2340'; ctx.fillRect(px, py, tile, tile);
+        ctx.fillStyle = BRAND.coral;
+        for (let i = 0; i < 3; i++) ctx.fillRect(px + tile * (0.15 + i * 0.3), py, tile * 0.12, tile);
+        ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(px, py + tile * 0.45, tile, tile * 0.1);
+      }
+      this.drawBoss(ctx, game, map.boss);
+    }
+
     // Yo dibujo las sierras girando.
     for (const s of map.saws) {
       const cx = cam.sx(s.x + 0.5), cy = cam.sy(s.y + 0.5);
@@ -519,6 +633,9 @@ export class Renderer {
 
     // Yo dibujo las partículas encima de todo.
     game.particles.draw(ctx, cam);
+
+    // Yo muestro el nombre y la vida del jefe arriba del tablero.
+    if (map.boss && (!map.boss.defeated || map.boss.deadT < 2)) this.drawBossBar(ctx, game, map.boss);
 
     // Yo oscurezco las cuevas sin luz: solo se ve alrededor de Blipo, de los cristales encendidos y de la salida.
     if (game.level.dark) this.drawDarkness(game);

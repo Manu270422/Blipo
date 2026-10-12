@@ -43,6 +43,7 @@ export class Game {
     this.lives = lives;
     this.started = false;
     this.respawnT = 0;
+    this.bossSeg = null;
     this.portalCd = 0;
     this.trailT = 0;
     this.flash = 0;
@@ -104,6 +105,13 @@ export class Game {
 
     // Yo reviso si cayó fuera del mapa o tocó un peligro.
     if (p.crushed || p.y > this.map.rows + 1 || this.map.hitsHazard(p.hurtBox())) { this.die(); return; }
+
+    // Yo sacudo la cámara cuando el jefe termina un golpe contra el suelo.
+    const boss = this.map.boss;
+    if (boss && !boss.defeated) {
+      if (this.bossSeg && this.bossSeg !== boss.seg && this.bossSeg.slam) { this.camera.shake(0.4); this.audio.sfx('land'); }
+      this.bossSeg = boss.seg;
+    }
 
     // Yo enciendo los cristales que Blipo toca: iluminan la cueva para siempre en este intento.
     for (const c of this.map.crystals) {
@@ -197,6 +205,14 @@ export class Game {
         this.dust(data.dir > 0 ? p.x + p.w : p.x, p.cy, 6);
         bus.emit('stat', { key: 'wallJumps' });
         break;
+      case 'stomp':
+        this.audio.sfx(data.defeated ? 'bossdown' : 'stomp');
+        this.camera.shake(data.defeated ? 0.6 : 0.3);
+        this.flash = data.defeated ? 0.9 : 0.4;
+        this.haptics.pulse(data.defeated ? [40, 40, 80] : [30, 20, 30]);
+        this.burst(p.cx, p.y + (p.g > 0 ? p.h : 0), '#FFC23D', data.defeated ? 40 : 20, data.defeated ? 8 : 5);
+        if (data.defeated) bus.emit('toast', { key: 'toast_boss_down', icon: 'i-trophy' });
+        break;
       case 'flip':
         this.audio.sfx('flip');
         this.particles.emit(p.cx, p.cy, { count: 16, color: '#C3A6FF', speed: 5, life: 0.45, gravity: 0, size: 0.13 });
@@ -258,6 +274,8 @@ export class Game {
   respawn() {
     this.player.spawn(this.respawnPoint.x, this.respawnPoint.y, this.respawnPoint.g);
     this.map.resetDynamic(this.respawnPoint.switchOn);
+    // Yo reinicio al jefe si Blipo muere antes de derrotarlo.
+    if (this.map.boss && !this.map.boss.defeated) this.map.boss.reset();
     this.state = 'playing';
     this.input.clear();
     this.burst(this.player.cx, this.player.cy, resolveColor(this.skin.trail, this.clock), 10, 3);

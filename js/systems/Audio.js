@@ -11,6 +11,7 @@ const THEMES = {
   w2: { root: 52, bpm: 124, prog: [0, -2, -4, -5], wave: 'sawtooth' },
   w3: { root: 60, bpm: 108, prog: [0, 5, -4, -2], wave: 'triangle' },
   w4: { root: 50, bpm: 130, prog: [0, 1, -4, -2], wave: 'sawtooth' },
+  boss: { root: 45, bpm: 146, prog: [0, 1, -2, -5], wave: 'sawtooth' },
 };
 
 export class AudioManager {
@@ -130,6 +131,14 @@ export class AudioManager {
       case 'mushroom': this.tone({ type: 'sine', f0: 220, f1: 620, dur: 0.16, vol: 0.18 }); break;
       case 'chime':
         [1318, 1760, 2637].forEach((f, i) => this.tone({ type: 'sine', f0: f, dur: 0.3, vol: 0.08, delay: i * 0.05 }));
+        break;
+      case 'stomp':
+        this.tone({ type: 'square', f0: 220, f1: 90, dur: 0.18, vol: 0.16 });
+        this.burst({ dur: 0.15, vol: 0.18, freq: 600 });
+        break;
+      case 'bossdown':
+        this.tone({ type: 'sawtooth', f0: 300, f1: 40, dur: 0.8, vol: 0.16 });
+        [523, 659, 784, 1046, 1318].forEach((f, i) => this.tone({ type: 'triangle', f0: f, dur: 0.3, vol: 0.13, delay: 0.5 + i * 0.09 }));
         break;
       case 'flip': this.tone({ type: 'triangle', f0: 900, f1: 300, dur: 0.22, vol: 0.12 }); this.tone({ type: 'sine', f0: 300, f1: 900, dur: 0.22, vol: 0.08, delay: 0.05 }); break;
       case 'switch': this.tone({ type: 'square', f0: 520, dur: 0.05, vol: 0.08 }); this.tone({ type: 'square', f0: 780, dur: 0.08, vol: 0.08, delay: 0.06 }); break;
