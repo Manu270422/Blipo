@@ -4,17 +4,20 @@ import { CAVES } from './caves.js';
 import { FOUNDRY } from './foundry.js';
 import { GLACIER } from './glacier.js';
 import { VOID } from './void.js';
+import { BOSS_LEVELS } from './bosses.js';
 import { generateLevel } from './generator.js';
 import { hashString } from '../core/Random.js';
 
 // Yo defino cada mundo: color, música, dificultad y estrellas necesarias para abrirlo.
-// Yo marco con "levels" los mundos hechos a mano y con "diff" los generados con semilla fija.
+// Yo cierro cada mundo con su jefe: la arena va siempre al final de la lista de niveles.
+const withBoss = (levels, w) => [...levels, BOSS_LEVELS[w]];
+const QUARRY = withBoss(CAMPAIGN, 0), CAVERNS = withBoss(CAVES, 1), FORGE = withBoss(FOUNDRY, 2), ICE = withBoss(GLACIER, 3), ABYSS = withBoss(VOID, 4);
 export const WORLDS = [
-  { id: 0, key: 'w_quarry', hue: 205, style: 'quarry', music: 'w0', unlock: 0, count: CAMPAIGN.length, source: 'hand', levels: CAMPAIGN },
-  { id: 1, key: 'w_caves', hue: 150, style: 'caves', music: 'w1', unlock: 10, count: CAVES.length, source: 'hand', levels: CAVES },
-  { id: 2, key: 'w_foundry', hue: 18, style: 'foundry', music: 'w2', unlock: 35, count: FOUNDRY.length, source: 'hand', levels: FOUNDRY },
-  { id: 3, key: 'w_glacier', hue: 190, style: 'glacier', music: 'w3', unlock: 65, count: GLACIER.length, source: 'hand', levels: GLACIER },
-  { id: 4, key: 'w_void', hue: 280, style: 'void', music: 'w4', unlock: 95, count: VOID.length, source: 'hand', levels: VOID },
+  { id: 0, key: 'w_quarry', hue: 205, style: 'quarry', music: 'w0', unlock: 0, count: QUARRY.length, source: 'hand', levels: QUARRY },
+  { id: 1, key: 'w_caves', hue: 150, style: 'caves', music: 'w1', unlock: 10, count: CAVERNS.length, source: 'hand', levels: CAVERNS },
+  { id: 2, key: 'w_foundry', hue: 18, style: 'foundry', music: 'w2', unlock: 35, count: FORGE.length, source: 'hand', levels: FORGE },
+  { id: 3, key: 'w_glacier', hue: 190, style: 'glacier', music: 'w3', unlock: 65, count: ICE.length, source: 'hand', levels: ICE },
+  { id: 4, key: 'w_void', hue: 280, style: 'void', music: 'w4', unlock: 95, count: ABYSS.length, source: 'hand', levels: ABYSS },
 ];
 
 // Yo genero la llave única de un nivel de campaña.
@@ -25,7 +28,7 @@ export function getCampaignLevel(w, l) {
   const world = WORLDS[w];
   if (world.source === 'hand') {
     const def = world.levels[l];
-    return { ...def, id: levelKey(w, l), world: w, index: l, hue: world.hue, style: world.style, music: world.music };
+    return { ...def, id: levelKey(w, l), world: w, index: l, hue: world.hue, style: world.style, music: def.boss ? 'boss' : world.music };
   }
   // Yo interpolo la dificultad dentro del mundo.
   const t = world.count > 1 ? l / (world.count - 1) : 0;

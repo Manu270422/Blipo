@@ -62,8 +62,11 @@ export class WorldsView {
       const unlocked = p.isLevelUnlocked(this.world, l);
       const isNext = unlocked && !rec?.cleared && !nextMarked;
       if (isNext) nextMarked = true;
-      if (!unlocked) return `<button class="level-cell is-locked" type="button" data-level="${l}" aria-label="${t('level_n', { n: l + 1 })} ${t('locked')}"><svg class="icon"><use href="#i-lock"/></svg></button>`;
-      return `<button class="level-cell ${isNext ? 'is-next' : ''}" type="button" data-level="${l}" style="--c:${color}" aria-label="${t('level_n', { n: l + 1 })}"><b>${l + 1}</b>${starsHtml(rec?.stars || 0)}</button>`;
+      // Yo marco la arena del jefe con una calavera (también cuando sigue bloqueada, para anunciarla).
+      const boss = !!world.levels?.[l]?.boss;
+      if (!unlocked) return `<button class="level-cell is-locked ${boss ? 'is-boss' : ''}" type="button" data-level="${l}" aria-label="${boss ? t('boss_level') : t('level_n', { n: l + 1 })} ${t('locked')}"><svg class="icon"><use href="#${boss ? 'i-skull' : 'i-lock'}"/></svg></button>`;
+      const label = boss ? `<b><svg class="icon"><use href="#i-skull"/></svg></b>` : `<b>${l + 1}</b>`;
+      return `<button class="level-cell ${isNext ? 'is-next' : ''} ${boss ? 'is-boss' : ''}" type="button" data-level="${l}" style="--c:${color}" aria-label="${boss ? t('boss_level') : t('level_n', { n: l + 1 })}">${label}${starsHtml(rec?.stars || 0)}</button>`;
     }).join('');
   }
 }

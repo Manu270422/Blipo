@@ -164,6 +164,22 @@ export default {
   hint_switch: 'Switches swap the pink and teal blocks.',
   hint_phase: 'Rhythm blocks take turns on their own and blink before they change.',
 
+  // Yo defino los jefes y sus arenas.
+  boss_level: 'Boss',
+  boss_golem: 'Rock Golem',
+  boss_spider: 'Spider Queen',
+  boss_furnace: 'Colossal Furnace',
+  boss_yeti: 'Ice Yeti',
+  boss_eye: 'Void Eye',
+  l_boss_golem: 'Boss: Rock Golem',
+  l_boss_spider: 'Boss: Spider Queen',
+  l_boss_furnace: 'Boss: Colossal Furnace',
+  l_boss_yeti: 'Boss: Ice Yeti',
+  l_boss_eye: 'Boss: Void Eye',
+  hint_boss: 'Learn its pattern. When it is dazed, land on it! Three hits open the door.',
+  hint_boss_eye: 'It rests on the floor and on the ceiling: use the orbs to land on it from both sides.',
+  toast_boss_down: 'Boss defeated! The door is open.',
+
   // Yo defino los nombres de las skins.
   skin_blipo: 'Blipo',
   skin_flama: 'Flame',

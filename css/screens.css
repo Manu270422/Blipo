@@ -100,6 +100,11 @@
 .level-cell.is-locked { background: var(--ink-3); color: var(--muted); cursor: not-allowed; }
 .level-cell.is-next { outline: 3px solid var(--gold); outline-offset: 3px; animation: next-glow 1.6s ease-in-out infinite; }
 @keyframes next-glow { 50% { outline-color: rgba(255,194,61,.35); } }
+/* Yo distingo la arena del jefe: bloque oscuro con borde coral y calavera. */
+.level-cell.is-boss { background: var(--ink-2); color: var(--coral); box-shadow: var(--bevel), inset 0 0 0 3px var(--coral); }
+.level-cell.is-boss b .icon { width: 1.4em; height: 1.4em; }
+.level-cell.is-boss .stars .on { color: var(--gold); }
+.level-cell.is-boss.is-locked { color: rgba(255,93,74,.55); }
 
 /* ---------- Tienda ---------- */
 .hint { color: var(--muted); text-align: center; margin: 0 auto var(--sp-4); font-size: var(--fs-sm); }
