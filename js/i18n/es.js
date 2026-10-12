@@ -164,6 +164,22 @@ export default {
   hint_switch: 'Los interruptores alternan los bloques rosas y turquesas.',
   hint_phase: 'Los bloques de ritmo se turnan solos y parpadean antes de cambiar.',
 
+  // Yo defino los jefes y sus arenas.
+  boss_level: 'Jefe',
+  boss_golem: 'Gólem de roca',
+  boss_spider: 'Araña reina',
+  boss_furnace: 'Horno colosal',
+  boss_yeti: 'Yeti de hielo',
+  boss_eye: 'Ojo del vacío',
+  l_boss_golem: 'Jefe: Gólem de roca',
+  l_boss_spider: 'Jefe: Araña reina',
+  l_boss_furnace: 'Jefe: Horno colosal',
+  l_boss_yeti: 'Jefe: Yeti de hielo',
+  l_boss_eye: 'Jefe: Ojo del vacío',
+  hint_boss: 'Aprende su patrón. Cuando quede aturdido, ¡cáele encima! Tres golpes abren la puerta.',
+  hint_boss_eye: 'Descansa en el suelo y en el techo: usa los orbes para caerle encima desde los dos lados.',
+  toast_boss_down: '¡Jefe derrotado! La puerta está abierta.',
+
   // Yo defino los nombres de las skins.
   skin_blipo: 'Blipo',
   skin_flama: 'Flama',

@@ -33,6 +33,7 @@ export const T = Object.freeze({
   SWITCH_OFF: 'a',   // Yo marco un bloque que es sólido con el interruptor apagado.
   PHASE_A: 'T',      // Yo marco un bloque de ritmo (fase A, empieza sólido).
   PHASE_B: 't',      // Yo marco un bloque de ritmo (fase B, empieza fantasma).
+  DOOR: 'D',         // Yo marco la puerta de la arena: se abre al derrotar al jefe.
 });
 
 // Yo defino qué tiles bloquean el paso siempre.

@@ -2,6 +2,8 @@
 import { GRID, GAME } from '../config.js';
 import { T, SOLID, HAZARD_BOX, SAW_RADIUS, BELT_DIR, JET, ICICLE, WIND, jetPhase, phaseAOn } from '../levels/tiles.js';
 import { Mover } from '../entities/Mover.js';
+import { Boss } from '../entities/Boss.js';
+import { BOSSES } from '../levels/bosses.js';
 
 export class TileMap {
   // Yo construyo el mapa a partir de { rows, start, movers }.
@@ -35,6 +37,8 @@ export class TileMap {
     this.winds = (def.winds || []).map((w) => ({ force: WIND.FORCE, period: 0, on: 0, phase: 0, ...w, state: 'on' }));
     // Yo creo las plataformas móviles descritas en el nivel.
     this.movers = (def.movers || []).map((m) => new Mover(m));
+    // Yo creo el jefe de la arena, si el nivel tiene uno.
+    this.boss = def.boss ? new Boss(BOSSES[def.boss]) : null;
     // Yo llevo el reloj del mapa para las trampas con ritmo.
     this.time = 0;
     // Yo ubico el inicio definido en el nivel.
@@ -156,6 +160,7 @@ export class TileMap {
     if (c === T.SWITCH_OFF) return !this.switchOn;
     if (c === T.PHASE_A) return this.phaseA;
     if (c === T.PHASE_B) return !this.phaseA;
+    if (c === T.DOOR) return !(this.boss && this.boss.defeated);
     return SOLID.has(c);
   }
 
@@ -184,6 +189,14 @@ export class TileMap {
       const fx0 = j.x + 0.22, fx1 = j.x + 0.78, fy0 = j.y - j.reach, fy1 = j.y;
       if (box.x < fx1 && box.x + box.w > fx0 && box.y < fy1 && box.y + box.h > fy0) return true;
     }
+    // Yo reviso los proyectiles del jefe como círculos.
+    if (this.boss) {
+      for (const s of this.boss.projectiles(this)) {
+        const nx = Math.max(box.x, Math.min(s.x, box.x + box.w));
+        const ny = Math.max(box.y, Math.min(s.y, box.y + box.h));
+        if ((s.x - nx) ** 2 + (s.y - ny) ** 2 < s.r ** 2) return true;
+      }
+    }
     // Yo reviso los carámbanos (colgando, temblando o cayendo).
     for (const c of this.icicles) {
       if (c.state === 'gone') continue;
@@ -200,6 +213,7 @@ export class TileMap {
     // Yo avanzo el reloj, las plataformas móviles y las llamaradas.
     this.time += dt;
     for (const m of this.movers) m.update(this.time, dt);
+    if (this.boss) this.boss.update(dt);
     for (const j of this.jets) {
       const ph = jetPhase(j.ch, this.time);
       j.ignited = ph === 'on' && j.phase !== 'on';

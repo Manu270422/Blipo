@@ -34,6 +34,8 @@ function cloneMap(m) {
   if (m.winds.length) c.winds = m.winds.map((o) => ({ ...o }));
   if (m.orbs.length) c.orbs = m.orbs.map((o) => ({ ...o }));
   if (m.switches.length) c.switches = m.switches.map((o) => ({ ...o }));
+  // Yo copio el estado del jefe (su línea de tiempo y disparos se comparten).
+  if (m.boss) c.boss = Object.assign(Object.create(Object.getPrototypeOf(m.boss)), m.boss);
   return c;
 }
 
@@ -96,6 +98,11 @@ function key(n) {
   }
   if (map.jets.some((j) => Math.abs(j.x + 0.5 - p.cx) < 5 && Math.abs(j.y - p.cy) < 5)) k += `,j${Math.round((map.time % 2.4) / 0.1)}`;
   if (map.crumbles.length) k += `,${map.crumbles.map((c) => c.state[0]).join('')}`;
+  // Yo recuerdo la vida del jefe y el instante de su ciclo (su patrón depende solo de eso).
+  if (map.boss) {
+    const b = map.boss;
+    k += b.defeated ? ',bd' : `,b${b.hp}:${b.hurtT > 0 ? 1 : 0}:${b.hitKey === b.segKey ? 1 : 0}:${Math.round((b.t % b.cycle) / 0.1)}`;
+  }
   // Yo recuerdo la gravedad, el interruptor, el ritmo de los bloques cercanos y qué orbes cercanos están listos.
   k += `,g${p.g},s${map.switchOn ? 1 : 0}`;
   if (map.phases.some((b) => Math.abs(b.x + 0.5 - p.cx) < 6 && Math.abs(b.y + 0.5 - p.cy) < 6)) k += `,p${Math.round((((map.time % 3) + 3) % 3) / 0.1)}`;
@@ -219,6 +226,60 @@ function search(start, gemIndex = -1) {
   return { node: null, expanded, closest: closest.p };
 }
 
+// Yo busco con A* cualquier meta, con un límite de tiempo simulado para no perderme en esperas eternas.
+function astar(start, done, h, maxT = Infinity) {
+  const seen = new Set([key(start)]);
+  const open = new Heap();
+  open.push({ n: start, f: h(start) * WEIGHT });
+  let expanded = 0;
+  while (open.size && expanded < MAX_NODES) {
+    const { n } = open.pop();
+    expanded++;
+    for (const a of ACTIONS) {
+      const c = step(n, a);
+      if (!c || c.exit || c.t > maxT) continue;
+      if (done(c)) return { node: c, expanded };
+      const k = key(c);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      open.push({ n: c, f: c.t + h(c) * WEIGHT });
+    }
+  }
+  return { node: null, expanded };
+}
+
+// Yo calculo cuánto falta para que el jefe quede aturdido y dónde estará (su línea de tiempo es fija).
+function nextDaze(b) {
+  const ct = ((b.t % b.cycle) + b.cycle) % b.cycle;
+  let best = null;
+  for (const s of b.segments) {
+    if (!s.vulnerable) continue;
+    let wait = s.t0 - ct;
+    // Yo descarto el aturdimiento actual si ya recibió su golpe (solo acepta uno).
+    const current = ct >= s.t0 && ct < s.t0 + s.t;
+    if (current && b.hitKey !== b.segKey) wait = 0;
+    else if (wait <= 0) wait += b.cycle;
+    if (!best || wait < best.wait) best = { wait, x: s.to[0] + b.w / 2, y: s.to[1] + b.h / 2 };
+  }
+  return best;
+}
+
+// Yo derroto al jefe golpe por golpe: cada etapa busca solo el siguiente golpe (búsquedas cortas).
+function defeatBoss(start) {
+  let n = start;
+  while (n && !n.map.boss.defeated) {
+    const hp0 = n.map.boss.hp, b0 = n.map.boss;
+    const r = astar(n, (c) => c.map.boss.defeated || c.map.boss.hp < hp0, (c) => {
+      // Yo apunto al lugar y al momento del próximo aturdimiento: llegar antes no sirve de nada.
+      const v = nextDaze(c.map.boss);
+      return Math.max(v.wait, Math.hypot(v.x - c.p.cx, v.y - c.p.cy) / PHYS.MOVE_SPEED);
+    }, n.t + b0.cycle * 2 + 2);
+    if (!r.node) return { node: null, hp: hp0, expanded: r.expanded };
+    n = { ...r.node, exit: false };
+  }
+  return { node: n };
+}
+
 // Yo reviso un nivel completo: ruta a la salida y a cada gema (y de ahí a la salida).
 export function checkLevel(level) {
   const map = new TileMap(level);
@@ -226,11 +287,21 @@ export function checkLevel(level) {
   const root = { map, p, portalCd: 0, held: false, gems: 0, exit: false, t: 0 };
   const out = { id: level.id, name: level.name, size: `${map.cols}x${map.rows}`, ok: true, notes: [] };
   if (map.gems.length !== 3) { out.ok = false; out.notes.push(`tiene ${map.gems.length} gemas (deben ser 3)`); }
-  const exit = search(root);
+  // Yo, en una arena, primero derroto al jefe y después busco la salida (la puerta se abre al final).
+  const prelude = (n) => {
+    if (!map.boss) return n;
+    const r = defeatBoss(n);
+    if (!r.node) { out.ok = false; out.notes.push(`no pude derrotar al jefe (le quedaban ${r.hp} golpes; ${r.expanded} estados)`); }
+    return r.node;
+  };
+  const fought = prelude(root);
+  if (!fought) return out;
+  const exit = search(fought);
   if (!exit.node) { out.ok = false; out.notes.push(`sin ruta a la salida (${exit.expanded} estados; llegué hasta x=${exit.closest.cx.toFixed(1)} y=${exit.closest.cy.toFixed(1)})`); return out; }
   out.best = exit.node.t;
   map.gems.forEach((g, i) => {
-    const r = search(root, i);
+    // Yo, en una arena, verifico cada gema después de la pelea (la arena queda quieta y la puerta abierta).
+    const r = map.boss ? search(fought, i) : search(root, i);
     if (!r.node) { out.ok = false; out.notes.push(`gema ${i + 1} (${g.x},${g.y}) sin ruta que la recoja y salga (${r.expanded} estados)`); }
   });
   return out;

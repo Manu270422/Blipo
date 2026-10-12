@@ -27,6 +27,7 @@ export const PHYS = Object.freeze({
   MUSHROOM_VEL: 19,       // Yo lanzo al jugador con el hongo (~4 tiles, menos que el resorte).
   WEB_SPEED: 3.2,         // Yo limito la velocidad horizontal dentro de la telaraña.
   WEB_FALL: 2.2,          // Yo limito la caída dentro de la telaraña.
+  STOMP_VEL: 15,          // Yo hago rebotar a Blipo al caerle encima a un jefe.
   WEB_RISE: 7,            // Yo limito el impulso de cada salto dentro de la telaraña (se sube a toques).
   COYOTE_TIME: 0.1,       // Yo permito saltar unos milisegundos después de dejar el borde.
   JUMP_BUFFER: 0.12,      // Yo recuerdo el salto pulsado justo antes de aterrizar.
