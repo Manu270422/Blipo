@@ -639,9 +639,9 @@ export class Renderer {
       if (p.g < 0) {
         const cy = cam.sy(p.y + p.h / 2);
         ctx.save(); ctx.translate(0, cy * 2); ctx.scale(1, -1);
-        drawPlayer(ctx, game.skin, p, cam.sx(p.x + p.w / 2), cam.sy(p.y + p.h), tile, time);
+        drawPlayer(ctx, game.skin, p, cam.sx(p.x + p.w / 2), cam.sy(p.y + p.h), tile, time, game.look?.hat);
         ctx.restore();
-      } else drawPlayer(ctx, game.skin, p, cam.sx(p.x + p.w / 2), cam.sy(p.y + p.h), tile, time);
+      } else drawPlayer(ctx, game.skin, p, cam.sx(p.x + p.w / 2), cam.sy(p.y + p.h), tile, time, game.look?.hat);
     }
 
     // Yo dibujo las partículas encima de todo.

@@ -1,4 +1,5 @@
 // Yo defino las skins de Blipo y cómo se dibuja cada una en el canvas.
+import { drawHat } from './Hats.js';
 
 // Yo describo cada skin: forma, colores, precio y estela.
 export const SKINS = [
@@ -37,8 +38,8 @@ function roundShape(ctx, x, y, w, h, rt, rb) {
   ctx.closePath();
 }
 
-// Yo dibujo al jugador. (cx, by) es el centro inferior en píxeles y s el tamaño del tile.
-export function drawPlayer(ctx, skin, state, cx, by, s, time) {
+// Yo dibujo al jugador. (cx, by) es el centro inferior en píxeles, s el tamaño del tile y "hat" su sombrero.
+export function drawPlayer(ctx, skin, state, cx, by, s, time, hat = null) {
   const body = resolveColor(skin.body, time);
   const accent = resolveColor(skin.accent, time, 40);
   // Yo calculo el parpadeo cada ~4 segundos (igual que la animación "blink" del prototipo).
@@ -125,5 +126,7 @@ export function drawPlayer(ctx, skin, state, cx, by, s, time) {
     ctx.lineWidth = Math.max(1, s * 0.05);
     ctx.beginPath(); ctx.moveTo(ex - er, ey - er * 1.5); ctx.lineTo(ex + er, ey - er * 1.2); ctx.stroke();
   }
+  // Yo me pongo el sombrero al final para que quede encima de la cabeza.
+  drawHat(ctx, hat, y, w, s, time);
   ctx.restore();
 }

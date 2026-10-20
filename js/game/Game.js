@@ -9,6 +9,7 @@ import { Player } from '../entities/Player.js';
 import { resolveColor } from '../entities/Skins.js';
 import { T } from '../levels/tiles.js';
 import { GhostRecorder } from './Ghost.js';
+import { emitTrail, emitBurst } from './Cosmetics.js';
 
 export class Game {
   // Yo recibo los servicios que necesito (inyección de dependencias).
@@ -29,11 +30,13 @@ export class Game {
   }
 
   // Yo cargo un nivel y dejo todo listo para jugar.
-  load(level, { skin, highContrast = false, lives = null, ghost = null, medals = null } = {}) {
+  load(level, { skin, highContrast = false, lives = null, ghost = null, medals = null, look = null } = {}) {
     this.level = level;
     this.skin = skin;
     // Yo guardo las opciones para poder reiniciar igual.
-    this.opts = { skin, highContrast, ghost, medals };
+    this.opts = { skin, highContrast, ghost, medals, look };
+    // Yo guardo los cosméticos puestos (sombrero, estela y explosión).
+    this.look = look || { hat: 'none', trail: 'classic', burst: 'classic' };
     // Yo cargo el fantasma del mejor intento y empiezo a grabar este.
     this.ghost = ghost;
     this.medals = medals;
@@ -186,7 +189,7 @@ export class Game {
     if (this.trailT <= 0 && (Math.abs(p.vx) > 1 || Math.abs(p.vy) > 1)) {
       this.trailT = 0.035;
       const col = resolveColor(this.skin.trail, this.clock);
-      this.particles.emit(cx + (Math.random() - 0.5) * 0.4, p.y + 0.1, { count: 1, color: col, speed: 0.6, life: 0.6, gravity: -3, size: 0.12, angle: -Math.PI / 2, spread: 0.8 });
+      emitTrail(this.particles, this.look.trail, cx + (Math.random() - 0.5) * 0.4, p.y + 0.1, col, this.clock);
     }
     // Yo suelto polvo al deslizar por la pared.
     if (p.sliding && Math.random() < 0.3) {
@@ -264,9 +267,8 @@ export class Game {
     this.state = 'dead';
     this.respawnT = GAME.RESPAWN_DELAY;
     this.deaths += 1;
-    // Yo hago una explosión con el color de la skin.
-    this.burst(p.cx, p.cy, resolveColor(this.skin.body, this.clock), 28, 7);
-    this.burst(p.cx, p.cy, '#FFFFFF', 8, 5);
+    // Yo hago una explosión con el color de la skin y el estilo cosmético elegido.
+    emitBurst(this.particles, this.look.burst, p.cx, p.cy, resolveColor(this.skin.body, this.clock));
     this.camera.shake(0.35);
     this.flash = 0.6;
     this.audio.sfx('death');

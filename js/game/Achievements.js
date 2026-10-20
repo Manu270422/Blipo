@@ -28,6 +28,7 @@ export const ACHIEVEMENTS = [
   { id: 'silver_30', goal: 30, value: (d, p) => p.countMedals(2) },
   { id: 'records_10', goal: 10, value: (d) => d.stats.records || 0 },
   { id: 'missions_10', goal: 10, value: (d) => d.stats.missions || 0 },
+  { id: 'stylish', goal: 5, value: (d) => d.cosmetics.owned.length },
   { id: 'bosses_all', goal: WORLDS.length, value: (d, p) => WORLDS.filter((w) => p.record(w.id, w.count - 1)?.cleared).length },
 ];
 
