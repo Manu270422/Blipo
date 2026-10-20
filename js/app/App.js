@@ -10,6 +10,8 @@ import { Renderer, makeTheme } from '../engine/Renderer.js';
 import { Game } from '../game/Game.js';
 import { Progress } from '../game/Progress.js';
 import { checkAchievements, ACHIEVEMENT_REWARD } from '../game/Achievements.js';
+import { Missions, missionText } from '../game/Missions.js';
+import { ghostStore } from '../game/Ghost.js';
 import { getSkin } from '../entities/Skins.js';
 import { ScreenManager } from '../ui/ScreenManager.js';
 import { Toast } from '../ui/Toast.js';
@@ -36,6 +38,7 @@ export class App {
     this.storage = new Storage();
     i18n.set(this.storage.data.settings.lang || i18n.detect());
     this.progress = new Progress(this.storage);
+    this.missions = new Missions(this.storage, this.progress);
 
     // Yo creo los sistemas de entrada, sonido y vibración.
     this.input = new Input();
@@ -58,7 +61,7 @@ export class App {
 
     // Yo creo las vistas de cada pantalla.
     this.views = {
-      menu: new MenuView({ root, storage: this.storage, progress: this.progress }),
+      menu: new MenuView({ root, storage: this.storage, progress: this.progress, missions: this.missions }),
       worlds: new WorldsView({ root, progress: this.progress, audio: this.audio, onPlay: (w, l) => this.session.startCampaign(w, l) }),
       shop: new ShopView({ root, storage: this.storage, progress: this.progress, audio: this.audio, toast: this.toast, onChange: () => this.onSkinChange() }),
       achievements: new AchievementsView({ root, storage: this.storage, progress: this.progress }),
@@ -287,6 +290,7 @@ export class App {
         const ok = await this.dialog.confirm('reset_title', 'reset_text');
         if (!ok) return;
         this.storage.reset();
+        ghostStore.clear();
         this.onSkinChange();
         this.toast.show(t('reset_done'), { icon: 'i-check' });
         break;
@@ -320,9 +324,10 @@ export class App {
     bus.on('input:restart', () => this.session.restart());
     bus.on('game:complete', (summary) => this.session.complete(summary));
     bus.on('game:over', (summary) => this.session.over(summary));
-    bus.on('game:gem', () => { this.audio.sfx('gem'); this.haptics.pulse(15); });
+    bus.on('game:gem', () => { this.audio.sfx('gem'); this.haptics.pulse(15); this.trackMission('gemPickups'); });
     bus.on('stat', ({ key }) => {
       this.progress.bump(key);
+      this.trackMission(key);
       this.storage.save();
       // Yo reviso logros solo con estadísticas que pueden desbloquear alguno.
       if (key !== 'bounces' && key !== 'portals') this.checkAchievements();
@@ -331,6 +336,17 @@ export class App {
       if (key === 'toast_checkpoint') this.audio.sfx('checkpoint');
       this.toast.show(t(key), { icon: icon || 'i-check' });
     });
+  }
+
+  // Yo sumo progreso a las misiones del día y celebro las que se cumplen.
+  trackMission(stat, n = 1) {
+    const { done, bonus } = this.missions.track(stat, n);
+    done.forEach((m, i) => setTimeout(() => {
+      this.audio.sfx('achievement');
+      this.toast.show(t('mission_done', { text: missionText(t, m), n: m.reward }), { icon: 'i-check', variant: 'achievement' });
+    }, 300 + i * 900));
+    if (bonus) setTimeout(() => this.toast.show(t('missions_bonus', { n: bonus }), { icon: 'i-trophy', variant: 'achievement' }), 1400);
+    if (done.length) this.checkAchievements();
   }
 
   // Yo reviso logros nuevos, pago chispas y los anuncio.

@@ -29,6 +29,10 @@ export class StatsView {
       ['st_streak', formatNumber(d.daily.bestStreak)],
       ['st_survival', formatNumber(d.survival.best)],
       ['st_portals', formatNumber(s.portals)],
+      ['st_gold', `${this.progress.countMedals(3)}/${TOTAL_LEVELS}`],
+      ['st_records', formatNumber(s.records || 0)],
+      ['st_bosses', formatNumber(s.bossKills || 0)],
+      ['st_missions', formatNumber(s.missions || 0)],
     ];
     this.list.innerHTML = rows.map(([k, v]) => `<div class="stat"><dt>${t(k)}</dt><dd>${v}</dd></div>`).join('');
   }

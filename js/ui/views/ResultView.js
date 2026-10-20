@@ -10,6 +10,8 @@ export class ResultView {
     this.audio = audio;
     this.title = this.el.querySelector('[data-bind="result-title"]');
     this.stars = this.el.querySelector('[data-bind="result-stars"]');
+    this.medal = this.el.querySelector('[data-bind="result-medal"]');
+    this.target = this.el.querySelector('[data-bind="result-target"]');
     this.stats = this.el.querySelector('[data-bind="result-stats"]');
     this.reward = this.el.querySelector('[data-bind="result-reward"]');
     this.actions = this.el.querySelector('[data-bind="result-actions"]');
@@ -22,11 +24,20 @@ export class ResultView {
   }
 
   // Yo abro el overlay con la configuración dada.
-  show({ title, stars = null, stats, rewards = [], actions }) {
+  show({ title, stars = null, medal = null, newMedal = false, target = null, stats, rewards = [], actions }) {
     this.title.textContent = title;
     // Yo muestro estrellas solo si aplican al modo.
     this.stars.hidden = stars === null;
     if (stars !== null) this.stars.innerHTML = [0, 1, 2].map((i) => `<svg class="icon ${i < stars ? 'on' : ''}"><use href="#i-star"/></svg>`).join('');
+    // Yo muestro la medalla de tiempo (bronce, plata u oro) y cuánto falta para la siguiente.
+    this.medal.hidden = medal === null;
+    if (medal !== null) {
+      const name = ['none', 'bronze', 'silver', 'gold'][medal];
+      const fresh = newMedal && medal > 0 ? `<em class="medal__new">${t('medal_new')}</em>` : '';
+      this.medal.innerHTML = `<span class="medal medal--${name}"><svg class="icon"><use href="#i-medal"/></svg>${t(`medal_${medal}`)}${fresh}</span>`;
+    }
+    this.target.hidden = !target;
+    this.target.textContent = target || '';
     this.stats.innerHTML = stats.map((s) => `<div class="${s.good ? 'is-good' : ''}"><dt>${s.label}</dt><dd>${s.value}</dd></div>`).join('');
     this.reward.innerHTML = rewards.map((r) => `<span class="${r.record ? 'record' : ''}"><svg class="icon"><use href="#${r.icon || 'i-spark'}"/></svg>${r.text}</span>`).join('');
     this.handlers = {};
@@ -35,6 +46,8 @@ export class ResultView {
       return `<button class="btn ${a.primary ? 'btn--gold' : a.ghost ? 'btn--ghost' : ''}" type="button" data-result="${a.id}" aria-label="${a.label}"><svg class="icon"><use href="#${a.icon}"/></svg>${a.text ? `<span>${a.label}</span>` : ''}</button>`;
     }).join('');
     this.screens.open('result');
+    // Yo enfoco la acción principal: con Enter o Espacio se sigue jugando sin buscar el mouse.
+    setTimeout(() => this.actions.querySelector('.btn--gold')?.focus({ preventScroll: true }), 350);
     // Yo suena una estrella por cada estrella ganada, sincronizada con la animación.
     if (stars) for (let i = 0; i < stars; i++) setTimeout(() => this.audio.sfx('star'), 260 + i * 180);
   }
