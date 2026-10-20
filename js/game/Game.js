@@ -10,6 +10,7 @@ import { resolveColor } from '../entities/Skins.js';
 import { T } from '../levels/tiles.js';
 import { GhostRecorder } from './Ghost.js';
 import { emitTrail, emitBurst } from './Cosmetics.js';
+import { t } from '../core/I18n.js';
 
 export class Game {
   // Yo recibo los servicios que necesito (inyección de dependencias).
@@ -52,6 +53,11 @@ export class Game {
     this.started = false;
     this.respawnT = 0;
     this.bossSeg = null;
+    // Yo preparo el "jugo": congelado de impacto, textos flotantes, cadena de gemas y onda al reaparecer.
+    this.hitstop = 0;
+    this.floaters = [];
+    this.spawnFx = 0;
+    this.moved = false;
     this.portalCd = 0;
     this.trailT = 0;
     this.flash = 0;
@@ -89,9 +95,15 @@ export class Game {
   update(dt) {
     // Yo congelo todo mientras está en pausa.
     if (this.state === 'paused') return;
+    // Yo congelo el mundo un instante tras un golpe fuerte: así cada impacto pesa (hit-stop).
+    if (this.hitstop > 0) { this.hitstop -= dt; return; }
     this.clock += dt;
     this.flash = Math.max(0, this.flash - dt * 3);
-    this.particles.update(dt);
+    this.spawnFx = Math.max(0, this.spawnFx - dt);
+    // Yo celebro la victoria en cámara lenta mientras aparece el resultado.
+    const fx = this.state === 'complete' ? dt * 0.4 : dt;
+    this.particles.update(fx);
+    this.updateFloaters(fx);
     if (!this.map) return;
     this.map.update(dt, this.player);
     if (this.state === 'dead') {
@@ -106,6 +118,8 @@ export class Game {
     // Yo arranco el cronómetro con el primer movimiento del jugador (justo para todos).
     if (!this.started && (this.input.left || this.input.right || this.input.jump || this.input.jumpQueued || Math.abs(p.vx) + Math.abs(p.vy) > 0.5)) this.started = true;
     if (this.started) this.time += dt;
+    // Yo recuerdo si el jugador ya tocó algún control (para retirar el cartel de entrada).
+    if (!this.moved && (this.input.left || this.input.right || this.input.jump)) this.moved = true;
     this.portalCd = Math.max(0, this.portalCd - dt);
 
     // Yo actualizo al jugador y reacciono a sus eventos.
@@ -160,9 +174,14 @@ export class Game {
     for (const g of this.map.gems) {
       if (!g.taken && (g.x + 0.5 - cx) ** 2 + (g.y + 0.5 - cy) ** 2 < 0.5) {
         g.taken = true;
-        this.burst(g.x + 0.5, g.y + 0.5, '#FFC23D', 16);
-        this.audio.sfx('gem');
-        this.haptics.pulse(15);
+        // Yo subo el tono con cada gema del nivel y celebro en grande la tercera.
+        const n = this.map.gems.filter((o) => o.taken).length;
+        const all = n === this.map.gems.length;
+        this.burst(g.x + 0.5, g.y + 0.5, '#FFC23D', all ? 30 : 16, all ? 7 : 5);
+        this.audio.sfx(all ? 'allgems' : 'gem', { step: n - 1 });
+        this.floater(g.x + 0.5, g.y, all ? t('fx_all_gems', { n }) : `${n}/${this.map.gems.length}`, '#FFC23D', all ? 1.3 : 1);
+        if (all) { this.hitstop = 0.05; this.camera.shake(0.12); }
+        this.haptics.pulse(all ? [15, 30, 15] : 15);
         bus.emit('game:gem', { index: g.index });
       }
     }
@@ -175,7 +194,7 @@ export class Game {
         this.respawnPoint = { x: k.x, y: k.y, g: p.g, switchOn: this.map.switchOn };
         this.burst(k.x + 0.5, k.y + 0.3, '#FFC23D', 12);
         this.audio.sfx('checkpoint');
-        bus.emit('toast', { key: 'toast_checkpoint' });
+        this.floater(k.x + 0.5, k.y - 0.4, t('fx_checkpoint'), '#2DE1C2', 1);
       }
     }
     // Yo termino el nivel al tocar la salida.
@@ -222,6 +241,9 @@ export class Game {
         this.flash = data.defeated ? 0.9 : 0.4;
         this.haptics.pulse(data.defeated ? [40, 40, 80] : [30, 20, 30]);
         this.burst(p.cx, p.y + (p.g > 0 ? p.h : 0), '#FFC23D', data.defeated ? 40 : 20, data.defeated ? 8 : 5);
+        // Yo congelo el golpe y lo anuncio sobre el jefe.
+        this.hitstop = data.defeated ? 0.28 : 0.11;
+        this.floater(p.cx, p.y - 0.6, data.defeated ? t('fx_ko') : t('fx_hit', { n: this.map.boss.hp }), data.defeated ? '#FFC23D' : '#FF5D4A', data.defeated ? 1.6 : 1.2);
         bus.emit('stat', { key: 'stomps' });
         if (data.defeated) { bus.emit('toast', { key: 'toast_boss_down', icon: 'i-trophy' }); bus.emit('stat', { key: 'bossKills' }); }
         break;
@@ -271,6 +293,9 @@ export class Game {
     emitBurst(this.particles, this.look.burst, p.cx, p.cy, resolveColor(this.skin.body, this.clock));
     this.camera.shake(0.35);
     this.flash = 0.6;
+    // Yo congelo el instante de la muerte y apago la música de golpe por un momento.
+    this.hitstop = 0.08;
+    this.audio.duck();
     this.audio.sfx('death');
     this.haptics.pulse([30, 30, 40]);
     bus.emit('stat', { key: 'deaths' });
@@ -290,6 +315,9 @@ export class Game {
     if (this.map.boss && !this.map.boss.defeated) this.map.boss.reset();
     this.state = 'playing';
     this.input.clear();
+    // Yo reaparezco con un "pop": me estiro y suelto una onda de energía.
+    this.player.stretch(0.45, 1.55);
+    this.spawnFx = 0.35;
     this.burst(this.player.cx, this.player.cy, resolveColor(this.skin.trail, this.clock), 10, 3);
   }
 
@@ -298,6 +326,12 @@ export class Game {
     this.state = 'complete';
     const p = this.player;
     this.burst(p.cx, p.cy, '#FFC23D', 30, 6);
+    // Yo lanzo confeti y me estiro de alegría.
+    const cols = ['#FF5D4A', '#FFC23D', '#2DE1C2', '#9B6BFF', '#F4EEDF'];
+    this.particles.emit(p.cx, p.cy - 0.5, { count: 40, color: (i) => cols[i % cols.length], speed: 10, life: 1.6, gravity: 9, size: 0.18, angle: -Math.PI / 2, spread: Math.PI * 1.1, spin: 6 });
+    p.stretch(0.7, 1.4);
+    this.floater(p.cx, p.y - 0.8, t('fx_clear'), '#FFC23D', 1.5);
+    this.hitstop = 0.06;
     this.flash = 0.8;
     this.audio.sfx('win');
     this.haptics.pulse([20, 40, 20]);
@@ -314,6 +348,18 @@ export class Game {
       lives: this.lives,
       recording: this.recorder ? this.recorder.encode() : null,
     };
+  }
+
+  // Yo muestro un texto que sube y se desvanece sobre el mundo (en tiles).
+  floater(x, y, text, color = '#FFFFFF', scale = 1) {
+    this.floaters.push({ x, y, text, color, scale, t: 0, life: 0.9 });
+    if (this.floaters.length > 8) this.floaters.shift();
+  }
+
+  // Yo hago subir y desaparecer los textos flotantes.
+  updateFloaters(dt) {
+    for (const f of this.floaters) { f.t += dt; f.y -= dt * 1.4; }
+    this.floaters = this.floaters.filter((f) => f.t < f.life);
   }
 
   // Yo emito una explosión de partículas.

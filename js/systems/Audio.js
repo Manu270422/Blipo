@@ -11,7 +11,7 @@ const THEMES = {
   w2: { root: 52, bpm: 124, prog: [0, -2, -4, -5], wave: 'sawtooth' },
   w3: { root: 60, bpm: 108, prog: [0, 5, -4, -2], wave: 'triangle' },
   w4: { root: 50, bpm: 130, prog: [0, 1, -4, -2], wave: 'sawtooth' },
-  boss: { root: 45, bpm: 146, prog: [0, 1, -2, -5], wave: 'sawtooth' },
+  boss: { root: 45, bpm: 146, prog: [0, 1, -2, -5], wave: 'sawtooth', fast: true },
 };
 
 export class AudioManager {
@@ -41,7 +41,11 @@ export class AudioManager {
     this.sfxGain = this.ctx.createGain();
     this.musicGain = this.ctx.createGain();
     this.sfxGain.connect(this.master);
-    this.musicGain.connect(this.master);
+    // Yo paso la música por un filtro: la apago al pausar y la "hundo" un instante al morir.
+    this.musicFilter = this.ctx.createBiquadFilter();
+    this.musicFilter.type = 'lowpass';
+    this.musicFilter.frequency.value = 18000;
+    this.musicGain.connect(this.musicFilter).connect(this.master);
     // Yo aplico volúmenes guardados.
     this.setVolumes(this.sfxVol, this.musicVol);
     // Yo preparo un buffer de ruido reutilizable.
@@ -73,6 +77,26 @@ export class AudioManager {
   suspend(on) {
     if (!this.ctx) return;
     if (on) this.ctx.suspend(); else this.ctx.resume();
+  }
+
+  // Yo hundo la música un instante (al morir) y la devuelvo sola.
+  duck() {
+    if (!this.ctx || this.muffled) return;
+    const f = this.musicFilter.frequency, t = this.ctx.currentTime;
+    f.cancelScheduledValues(t);
+    f.setValueAtTime(f.value, t);
+    f.exponentialRampToValueAtTime(380, t + 0.05);
+    f.exponentialRampToValueAtTime(18000, t + 0.75);
+  }
+
+  // Yo apago la música (pausa) o la devuelvo a su brillo normal.
+  muffle(on) {
+    if (!this.ctx) return;
+    this.muffled = on;
+    const f = this.musicFilter.frequency, t = this.ctx.currentTime;
+    f.cancelScheduledValues(t);
+    f.setValueAtTime(f.value, t);
+    f.exponentialRampToValueAtTime(on ? 650 : 18000, t + 0.25);
   }
 
   // Yo creo un tono con envolvente simple.
@@ -110,21 +134,29 @@ export class AudioManager {
   }
 
   // Yo reproduzco un efecto por nombre.
-  sfx(name) {
+  // "opts.step" sube el tono por pasos (por ejemplo, gemas seguidas).
+  sfx(name, opts = {}) {
     // Yo salgo si no hay audio o está silenciado.
     if (!this.ctx || this.sfxVol <= 0) return;
+    // Yo varío un poco el tono para que los sonidos repetidos no cansen.
+    const vary = 1 + (Math.random() - 0.5) * 0.08;
+    const up = Math.pow(2, ((opts.step || 0) * 3) / 12);
     switch (name) {
-      case 'jump': this.tone({ type: 'square', f0: 280, f1: 560, dur: 0.1, vol: 0.09 }); break;
+      case 'jump': this.tone({ type: 'square', f0: 280 * vary, f1: 560 * vary, dur: 0.1, vol: 0.09 }); break;
       case 'double': this.tone({ type: 'triangle', f0: 520, f1: 1040, dur: 0.13, vol: 0.14 }); this.burst({ dur: 0.08, vol: 0.05, freq: 3000, type: 'highpass' }); break;
-      case 'walljump': this.tone({ type: 'square', f0: 360, f1: 620, dur: 0.09, vol: 0.08 }); break;
-      case 'land': this.burst({ dur: 0.06, vol: 0.12, freq: 500 }); break;
+      case 'walljump': this.tone({ type: 'square', f0: 360 * vary, f1: 620 * vary, dur: 0.09, vol: 0.08 }); break;
+      case 'land': this.burst({ dur: 0.06, vol: 0.12, freq: 500 * vary }); break;
       case 'death':
         this.tone({ type: 'sawtooth', f0: 420, f1: 55, dur: 0.38, vol: 0.14 });
         this.burst({ dur: 0.3, vol: 0.2, freq: 900 });
         break;
       case 'gem':
-        this.tone({ type: 'sine', f0: 1318, dur: 0.08, vol: 0.14 });
-        this.tone({ type: 'sine', f0: 1975, dur: 0.16, vol: 0.12, delay: 0.06 });
+        this.tone({ type: 'sine', f0: 1318 * up, dur: 0.08, vol: 0.14 });
+        this.tone({ type: 'sine', f0: 1975 * up, dur: 0.16, vol: 0.12, delay: 0.06 });
+        break;
+      case 'allgems':
+        [1318, 1661, 1975, 2637].forEach((f, i) => this.tone({ type: 'triangle', f0: f, dur: 0.18, vol: 0.12, delay: i * 0.06 }));
+        this.burst({ dur: 0.25, vol: 0.06, freq: 6000, type: 'highpass', delay: 0.18 });
         break;
       case 'portal': this.tone({ type: 'sine', f0: 180, f1: 1400, dur: 0.32, vol: 0.14 }); break;
       case 'bounce': this.tone({ type: 'sine', f0: 160, f1: 780, dur: 0.18, vol: 0.2 }); break;
@@ -204,7 +236,7 @@ export class AudioManager {
     }
   }
 
-  // Yo toco un paso del secuenciador.
+  // Yo toco un paso del secuenciador: bajo, arpegio, colchón, melodía y batería.
   playStep(th, step, delay, len) {
     // Yo salgo si la música está en cero.
     if (this.musicVol <= 0) return;
@@ -213,6 +245,8 @@ export class AudioManager {
     const root = th.root + th.prog[bar];
     const inBar = step % 16;
     const dest = this.musicGain;
+    // Yo pongo un colchón suave con las notas del acorde al empezar cada compás.
+    if (inBar === 0) [12, 15, 19].forEach((n) => this.tone({ type: 'triangle', f0: mtof(root + n), dur: len * 15, vol: 0.05, delay, dest }));
     // Yo toco el bajo en corcheas.
     if (inBar % 2 === 0) this.tone({ type: 'triangle', f0: mtof(root - 12), dur: len * 1.8, vol: 0.5, delay, dest });
     // Yo toco un arpegio menor sobre el acorde.
@@ -221,9 +255,27 @@ export class AudioManager {
       const n = root + 12 + arp[(step >> 0) % arp.length];
       this.tone({ type: th.wave, f0: mtof(n), dur: len * 0.9, vol: 0.12, delay, dest });
     }
+    // Yo agrego una melodía propia de cada tema en los compases pares (pentatónica menor con semilla).
+    if (bar % 2 === 0) {
+      const motif = this.motif(th);
+      const m = motif[inBar];
+      if (m !== null) this.tone({ type: 'sine', f0: mtof(th.root + 24 + m), dur: len * 1.6, vol: 0.09, delay, dest });
+    }
     // Yo agrego un golpe tipo bombo en los tiempos fuertes.
     if (inBar % 8 === 0) this.tone({ type: 'sine', f0: 140, f1: 45, dur: 0.18, vol: 0.7, delay, dest });
-    // Yo agrego un hi-hat suave a contratiempo.
-    if (inBar % 4 === 2) this.burst({ dur: 0.04, vol: 0.12, freq: 7000, type: 'highpass', delay, dest });
+    // Yo agrego una caja en los tiempos 2 y 4.
+    if (inBar === 4 || inBar === 12) this.burst({ dur: 0.09, vol: 0.18, freq: 1900, type: 'bandpass', delay, dest });
+    // Yo agrego un hi-hat suave a contratiempo (más rápido en los jefes).
+    if (inBar % 4 === 2 || (th.fast && inBar % 2 === 1)) this.burst({ dur: 0.04, vol: 0.12, freq: 7000, type: 'highpass', delay, dest });
+  }
+
+  // Yo genero (una sola vez por tema) una frase de 16 pasos con notas de la pentatónica menor.
+  motif(th) {
+    if (th._motif) return th._motif;
+    const scale = [0, 3, 5, 7, 10, 12];
+    let seed = th.root * 131 + th.bpm * 7;
+    const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+    th._motif = Array.from({ length: 16 }, (_, i) => (i % 2 === 0 && rnd() < 0.7 ? scale[Math.floor(rnd() * scale.length)] : null));
+    return th._motif;
   }
 }

@@ -30,6 +30,38 @@
 .hud__center .icon.on { color: var(--gold); transform: scale(1.15); }
 .hud__center .icon.heart.on { color: var(--coral); }
 
+/* Yo animo la interfaz: la calavera rebota al morir, la gema salta al recogerla y el cronómetro destella. */
+.hud__stat.is-bump { animation: hud-bump .35s cubic-bezier(.2, 1.6, .4, 1); }
+.hud__stat.is-bump .icon { color: var(--coral); }
+.hud__center .icon.is-pop { animation: hud-pop .4s cubic-bezier(.2, 1.8, .4, 1); }
+.hud__stat.is-flash { animation: hud-flash .5s ease-out; }
+@keyframes hud-bump { 40% { transform: scale(1.25) rotate(-6deg); } }
+@keyframes hud-pop { 40% { transform: scale(1.7); } }
+@keyframes hud-flash { 0% { background: rgba(255,93,74,.7); } }
+
+/* Yo presento el nivel: el cartel baja, se queda un momento y se desvanece. */
+.level-banner {
+  position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%);
+  display: grid; justify-items: center; gap: 2px; padding: var(--sp-3) var(--sp-5);
+  border-radius: var(--r-lg); background: rgba(16, 13, 31, .78); text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 0 0 2px var(--line);
+  pointer-events: none !important; opacity: 0;
+}
+.level-banner.is-shown { animation: banner-in 2.2s ease-out both; }
+.level-banner small { color: var(--muted); font-weight: 900; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .08em; }
+.level-banner strong { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.6rem, 5vmin, 2.6rem); line-height: 1.1; }
+.level-banner span { color: var(--gold); font-weight: 900; font-size: var(--fs-sm); }
+@keyframes banner-in {
+  0% { opacity: 0; transform: translate(-50%, -80%) scale(.92); }
+  12% { opacity: 1; transform: translate(-50%, -50%) scale(1.03); }
+  18% { transform: translate(-50%, -50%) scale(1); }
+  78% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -40%); }
+}
+.level-banner.is-leaving { animation: banner-out .3s ease-in both; }
+@keyframes banner-out { from { opacity: 1; transform: translate(-50%, -50%); } to { opacity: 0; transform: translate(-50%, -70%); } }
+.reduced-motion .level-banner.is-shown { animation-duration: 1.6s; }
+
 /* ---------- Controles táctiles ---------- */
 .touch {
   position: absolute; left: 0; right: 0; bottom: 0;

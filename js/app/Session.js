@@ -36,7 +36,10 @@ export class Session {
     // Yo recuerdo el último nivel abierto para el botón "Jugar".
     this.storage.data.last = { world: w, level: l };
     const label = `${w + 1}-${l + 1}`;
-    this.withTutorial(() => this.begin(level, { label, mode: 'gems', slots: 3 }, null, { ghostId: level.id, medals: medalTimes(level) }));
+    // Yo presento el nivel con su mundo, su nombre y el tiempo para el oro.
+    const times = medalTimes(level);
+    const banner = { top: `${t(WORLDS[w].key)} · ${level.boss ? t('boss_level') : t('level_n', { n: l + 1 })}`, title: level.name ? t(level.name) : t('level_n', { n: l + 1 }), goal: t('banner_gold', { s: times.gold.toFixed(1) }) };
+    this.withTutorial(() => this.begin(level, { label, mode: 'gems', slots: 3 }, null, { ghostId: level.id, medals: times, banner }));
   }
 
   // Yo arranco el reto diario del día (mismo nivel para todo el mundo).
@@ -45,7 +48,8 @@ export class Session {
     const level = getDailyLevel(key);
     this.mode = 'daily';
     this.ctx = { key, level, n: dailyNumber() };
-    this.withTutorial(() => this.begin(level, { label: t('daily_label', { n: this.ctx.n }), mode: 'gems', slots: 3 }, null, { ghostId: `daily-${key}` }));
+    const banner = { top: t('daily_title'), title: t('daily_label', { n: this.ctx.n }), goal: t('banner_par', { s: level.par.toFixed(0) }) };
+    this.withTutorial(() => this.begin(level, { label: t('daily_label', { n: this.ctx.n }), mode: 'gems', slots: 3 }, null, { ghostId: `daily-${key}`, banner }));
   }
 
   // Yo arranco una carrera nueva de supervivencia con semilla aleatoria.
@@ -74,7 +78,7 @@ export class Session {
   }
 
   // Yo cargo el nivel en el motor y preparo HUD, música y controles.
-  begin(level, hud, lives = null, { ghostId = null, medals = null } = {}) {
+  begin(level, hud, lives = null, { ghostId = null, medals = null, banner = null } = {}) {
     const { app } = this;
     const s = this.storage.data.settings;
     app.screens.show('game', { remember: false });
@@ -86,6 +90,8 @@ export class Session {
     const ghost = ghostId && s.showGhost ? decodeGhost(ghostStore.load(ghostId)) : null;
     this.game.load(level, { skin: getSkin(this.storage.data.skins.equipped), highContrast: s.highContrast, lives, ghost, medals, look: app.wardrobe.look() });
     app.audio.playMusic(level.music || 'w0');
+    app.audio.muffle(false);
+    if (banner) app.hud.banner(banner);
     // Yo explico la mecánica nueva del nivel con un aviso corto.
     if (level.hint) bus.emit('toast', { key: level.hint, icon: 'i-spark' });
     // Yo espero un cuadro para medir el HUD ya visible y ajustar la cámara.
@@ -104,6 +110,7 @@ export class Session {
     app.input.context = 'menu';
     app.root.querySelector('[data-bind="pause-sub"]').textContent = this.pauseText();
     app.screens.open('pause');
+    app.audio.muffle(true);
     app.audio.sfx('click');
   }
 
@@ -113,6 +120,7 @@ export class Session {
     app.screens.close('pause');
     app.input.context = 'game';
     this.game.setPaused(false);
+    app.audio.muffle(false);
     app.audio.sfx('click');
   }
 
@@ -134,6 +142,7 @@ export class Session {
     if (!['playing', 'paused', 'dead'].includes(this.game.state)) return;
     app.screens.close('pause');
     app.input.context = 'game';
+    app.audio.muffle(false);
     this.game.restart();
     app.audio.sfx('click');
   }

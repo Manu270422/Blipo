@@ -278,6 +278,15 @@ export default {
   reward_record: '¡Nuevo récord!',
   medal_new: '¡Nueva!',
 
+  // Yo pongo los textos del "jugo" del juego (textos flotantes y cartel de entrada).
+  fx_checkpoint: '¡Control!',
+  fx_all_gems: '¡{n}/{n}!',
+  fx_hit: '¡Golpe! Quedan {n}',
+  fx_ko: '¡K.O.!',
+  fx_clear: '¡Superado!',
+  banner_gold: 'Oro en {s} s',
+  banner_par: 'Par: {s} s',
+
   // Yo nombro las pestañas de la tienda y los cosméticos.
   shop_tab_skins: 'Skins',
   shop_tab_hats: 'Sombreros',
