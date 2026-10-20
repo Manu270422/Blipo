@@ -122,6 +122,27 @@ export class Renderer {
     ctx.restore();
   }
 
+  // Yo dibujo los textos flotantes: entran con un pequeño rebote, suben y se desvanecen.
+  drawFloaters(ctx, game) {
+    if (!game.floaters.length) return;
+    const cam = game.camera, tile = cam.tile;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const f of game.floaters) {
+      const k = f.t / f.life;
+      const pop = f.t < 0.12 ? 0.6 + (f.t / 0.12) * 0.55 : f.t < 0.22 ? 1.15 - ((f.t - 0.12) / 0.1) * 0.15 : 1;
+      const size = Math.max(14, tile * 0.62) * f.scale * pop;
+      ctx.globalAlpha = k > 0.7 ? 1 - (k - 0.7) / 0.3 : 1;
+      ctx.font = `${size}px "Lilita One", system-ui, sans-serif`;
+      const x = cam.sx(f.x), y = cam.sy(f.y);
+      ctx.lineWidth = Math.max(3, size * 0.16);
+      ctx.strokeStyle = 'rgba(16,13,31,.85)';
+      ctx.strokeText(f.text, x, y);
+      ctx.fillStyle = f.color;
+      ctx.fillText(f.text, x, y);
+    }
+    ctx.globalAlpha = 1;
+  }
+
   // Yo dibujo el nombre del jefe y sus golpes restantes.
   drawBossBar(ctx, game, b) {
     // Yo me ubico abajo para no tapar los avisos ni el HUD de arriba.
@@ -652,6 +673,17 @@ export class Renderer {
 
     // Yo oscurezco las cuevas sin luz: solo se ve alrededor de Blipo, de los cristales encendidos y de la salida.
     if (game.level.dark) this.drawDarkness(game);
+
+    // Yo dibujo la onda de energía al reaparecer.
+    if (p && p.alive && game.spawnFx > 0) {
+      const k = 1 - game.spawnFx / 0.35;
+      ctx.strokeStyle = `rgba(255,255,255,${(1 - k) * 0.8})`;
+      ctx.lineWidth = Math.max(2, tile * 0.12 * (1 - k));
+      ctx.beginPath(); ctx.arc(cam.sx(p.cx), cam.sy(p.cy), tile * (0.3 + k * 1.4), 0, Math.PI * 2); ctx.stroke();
+    }
+
+    // Yo dibujo los textos flotantes encima de todo (también en las cuevas oscuras).
+    this.drawFloaters(ctx, game);
 
     // Yo aplico un destello de pantalla al morir o completar.
     if (game.flash > 0) {
