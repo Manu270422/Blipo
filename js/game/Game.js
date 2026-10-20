@@ -8,6 +8,7 @@ import { makeTheme } from '../engine/Renderer.js';
 import { Player } from '../entities/Player.js';
 import { resolveColor } from '../entities/Skins.js';
 import { T } from '../levels/tiles.js';
+import { GhostRecorder } from './Ghost.js';
 
 export class Game {
   // Yo recibo los servicios que necesito (inyección de dependencias).
@@ -28,11 +29,15 @@ export class Game {
   }
 
   // Yo cargo un nivel y dejo todo listo para jugar.
-  load(level, { skin, highContrast = false, lives = null } = {}) {
+  load(level, { skin, highContrast = false, lives = null, ghost = null, medals = null } = {}) {
     this.level = level;
     this.skin = skin;
     // Yo guardo las opciones para poder reiniciar igual.
-    this.opts = { skin, highContrast };
+    this.opts = { skin, highContrast, ghost, medals };
+    // Yo cargo el fantasma del mejor intento y empiezo a grabar este.
+    this.ghost = ghost;
+    this.medals = medals;
+    this.recorder = new GhostRecorder();
     this.map = new TileMap(level);
     this.theme = makeTheme(level.hue ?? 205, highContrast);
     this.player = new Player(this.map.start.x, this.map.start.y);
@@ -173,6 +178,9 @@ export class Game {
     // Yo termino el nivel al tocar la salida.
     if (this.map.isAt(cx, cy, T.EXIT)) { this.complete(); return; }
 
+    // Yo grabo este intento para el fantasma.
+    if (this.started) this.recorder.sample(this.time, p);
+
     // Yo suelto la estela del jugador (como el "trailBall" del prototipo).
     this.trailT -= dt;
     if (this.trailT <= 0 && (Math.abs(p.vx) > 1 || Math.abs(p.vy) > 1)) {
@@ -211,10 +219,12 @@ export class Game {
         this.flash = data.defeated ? 0.9 : 0.4;
         this.haptics.pulse(data.defeated ? [40, 40, 80] : [30, 20, 30]);
         this.burst(p.cx, p.y + (p.g > 0 ? p.h : 0), '#FFC23D', data.defeated ? 40 : 20, data.defeated ? 8 : 5);
-        if (data.defeated) bus.emit('toast', { key: 'toast_boss_down', icon: 'i-trophy' });
+        bus.emit('stat', { key: 'stomps' });
+        if (data.defeated) { bus.emit('toast', { key: 'toast_boss_down', icon: 'i-trophy' }); bus.emit('stat', { key: 'bossKills' }); }
         break;
       case 'flip':
         this.audio.sfx('flip');
+        bus.emit('stat', { key: 'flips' });
         this.particles.emit(p.cx, p.cy, { count: 16, color: '#C3A6FF', speed: 5, life: 0.45, gravity: 0, size: 0.13 });
         this.haptics.pulse(15);
         break;
@@ -300,6 +310,7 @@ export class Game {
       deaths: this.deaths,
       gems: this.map.gems.map((g) => g.taken),
       lives: this.lives,
+      recording: this.recorder ? this.recorder.encode() : null,
     };
   }
 

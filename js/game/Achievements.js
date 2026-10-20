@@ -23,6 +23,12 @@ export const ACHIEVEMENTS = [
   { id: 'survival_5', goal: 5, value: (d) => d.survival.best },
   { id: 'survival_15', goal: 15, value: (d) => d.survival.best },
   { id: 'collector', goal: 3, value: (d) => d.skins.owned.length },
+  { id: 'gold_1', goal: 1, value: (d, p) => p.countMedals(3) },
+  { id: 'gold_15', goal: 15, value: (d, p) => p.countMedals(3) },
+  { id: 'silver_30', goal: 30, value: (d, p) => p.countMedals(2) },
+  { id: 'records_10', goal: 10, value: (d) => d.stats.records || 0 },
+  { id: 'missions_10', goal: 10, value: (d) => d.stats.missions || 0 },
+  { id: 'bosses_all', goal: WORLDS.length, value: (d, p) => WORLDS.filter((w) => p.record(w.id, w.count - 1)?.cleared).length },
 ];
 
 // Yo cuento niveles superados de un mundo.

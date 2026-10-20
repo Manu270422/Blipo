@@ -56,6 +56,8 @@ export const ECONOMY = Object.freeze({
   DAILY_STREAK_BONUS: 10,   // Yo sumo bonus por cada día de racha.
   DAILY_STREAK_CAP: 7,      // Yo pongo tope a la racha para el bonus.
   SURVIVAL_PER_ROOM: 4,     // Yo pago por cada sala superada en supervivencia.
+  MEDAL: [0, 5, 15, 35],    // Yo pago la primera vez que se alcanza cada medalla (ninguna, bronce, plata, oro).
+  MISSIONS_BONUS: 50,       // Yo premio completar las tres misiones del día.
 });
 
 // Yo defino la llave de guardado y su versión para migraciones futuras.
