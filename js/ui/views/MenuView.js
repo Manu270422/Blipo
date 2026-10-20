@@ -36,6 +36,7 @@ export class MenuView {
     this.q('[data-bind="survival-sub"]').textContent = t('survival_sub', { n: d.survival.best });
     // Yo marco logros nuevos sin ver.
     this.q('[data-bind="ach-dot"]').hidden = !this.storage.data._newAch;
+    this.q('[data-bind="shop-dot"]').hidden = !this.storage.data._newCosmetic;
     this.renderMissions();
   }
 

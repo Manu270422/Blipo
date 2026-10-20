@@ -12,6 +12,7 @@ import { Progress } from '../game/Progress.js';
 import { checkAchievements, ACHIEVEMENT_REWARD } from '../game/Achievements.js';
 import { Missions, missionText } from '../game/Missions.js';
 import { ghostStore } from '../game/Ghost.js';
+import { Wardrobe } from '../game/Cosmetics.js';
 import { getSkin } from '../entities/Skins.js';
 import { ScreenManager } from '../ui/ScreenManager.js';
 import { Toast } from '../ui/Toast.js';
@@ -39,6 +40,7 @@ export class App {
     i18n.set(this.storage.data.settings.lang || i18n.detect());
     this.progress = new Progress(this.storage);
     this.missions = new Missions(this.storage, this.progress);
+    this.wardrobe = new Wardrobe(this.storage, this.progress);
 
     // Yo creo los sistemas de entrada, sonido y vibración.
     this.input = new Input();
@@ -63,7 +65,7 @@ export class App {
     this.views = {
       menu: new MenuView({ root, storage: this.storage, progress: this.progress, missions: this.missions }),
       worlds: new WorldsView({ root, progress: this.progress, audio: this.audio, onPlay: (w, l) => this.session.startCampaign(w, l) }),
-      shop: new ShopView({ root, storage: this.storage, progress: this.progress, audio: this.audio, toast: this.toast, onChange: () => this.onSkinChange() }),
+      shop: new ShopView({ root, storage: this.storage, progress: this.progress, wardrobe: this.wardrobe, audio: this.audio, toast: this.toast, onChange: () => this.onSkinChange() }),
       achievements: new AchievementsView({ root, storage: this.storage, progress: this.progress }),
       stats: new StatsView({ root, storage: this.storage, progress: this.progress }),
       settings: new SettingsView({ root, storage: this.storage, onApply: (name) => this.applySetting(name) }),
@@ -113,6 +115,8 @@ export class App {
       if (this.game.map) { this.game.render(dt); this.hud.update(this.game); }
     } else {
       this.mascot.render(this.time);
+      // Yo animo las vistas previas de estelas y explosiones mientras la tienda está abierta.
+      if (this.screens.current === 'shop') this.views.shop.animate(this.time, dt);
     }
   }
 
@@ -179,7 +183,7 @@ export class App {
 
   // Yo actualizo la skin en la mascota del menú.
   onSkinChange() {
-    this.mascot.setSkin(getSkin(this.storage.data.skins.equipped));
+    this.mascot.setSkin(getSkin(this.storage.data.skins.equipped), this.wardrobe.look().hat);
     this.checkAchievements();
   }
 
@@ -349,8 +353,19 @@ export class App {
     if (done.length) this.checkAchievements();
   }
 
+  // Yo entrego los cosméticos ganados con metas de juego y los anuncio.
+  checkCosmetics(silent = false) {
+    const fresh = this.wardrobe.checkUnlocks();
+    if (silent || !fresh.length) return;
+    fresh.forEach((c, i) => setTimeout(() => {
+      this.audio.sfx('buy');
+      this.toast.show(t('cosmetic_unlocked', { name: t(`cos_${c.kind}_${c.id}`) }), { icon: 'i-bag', variant: 'achievement' });
+    }, 1200 + i * 900));
+  }
+
   // Yo reviso logros nuevos, pago chispas y los anuncio.
   checkAchievements(silent = false) {
+    this.checkCosmetics(silent);
     const list = checkAchievements(this.storage, this.progress);
     if (!list.length) return;
     this.storage.data._newAch = true;

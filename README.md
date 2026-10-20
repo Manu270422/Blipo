@@ -39,7 +39,7 @@ Corre en el navegador, se instala como **PWA**, funciona **offline** y se empaqu
 
 | 🕹️ Precisión | 🌍 5 mundos | 📅 Reto diario | ♾️ Supervivencia | 🎨 9 skins |
 |:---:|:---:|:---:|:---:|:---:|
-| Doble salto | 59 niveles · 5 jefes | Racha 🔥 | 5 vidas | Chispas |
+| Doble salto | 59 niveles · 5 jefes | Racha 🔥 | 5 vidas | Chispas · cosméticos |
 
 </div>
 
@@ -72,6 +72,7 @@ Corre en el navegador, se instala como **PWA**, funciona **offline** y se empaqu
 - Fantasma de tu mejor intento: compites contra tu propio récord en cada nivel y en el reto diario
 - Tres misiones nuevas cada día con premio en chispas y bono por completarlas todas
 - Mapa de cada mundo con el camino entre niveles, Blipo marcando el siguiente y el jefe al final
+- Cosméticos que se ganan jugando: 10 sombreros, 7 estelas y 6 explosiones (la corona por 15 oros, la estela de fuego por vencer al Horno colosal…); todo es estético, nada da ventaja
 - Vacío con mecánicas propias: orbes que invierten la gravedad, interruptores que alternan bloques y bloques de ritmo
 - Cavernas con mecánicas propias: hongos saltarines, telarañas que frenan la caída y cuevas oscuras con cristales que iluminan
 - Fundición con mecánicas propias: cintas transportadoras, llamaradas con ritmo y plataformas móviles
@@ -79,7 +80,7 @@ Corre en el navegador, se instala como **PWA**, funciona **offline** y se empaqu
 - Mapas de tamaño libre (anchos y altos) con cámara que sigue a Blipo y fondos con paralaje por mundo
 - Reto diario: mismo nivel para todos, racha 🔥, premio creciente y botón para compartir
 - Supervivencia: salas infinitas cada vez más difíciles, 5 vidas
-- 23 logros y estadísticas de progreso
+- 24 logros y estadísticas de progreso
 
 </td>
 <td width="50%" valign="top">

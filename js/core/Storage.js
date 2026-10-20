@@ -40,6 +40,8 @@ export function defaultSave() {
     achievements: {},
     // Yo recuerdo si ya vio el tutorial.
     onboarded: false,
+    // Yo guardo los cosméticos: los que tiene ("tipo:id") y los que lleva puestos.
+    cosmetics: { owned: [], hat: 'none', trail: 'classic', burst: 'classic' },
     // Yo guardo las misiones del día (se regeneran al cambiar la fecha).
     missions: null,
     // Yo recuerdo el último nivel jugado para el botón "Continuar".
