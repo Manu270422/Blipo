@@ -1,6 +1,7 @@
 // Yo dibujo el mundo en canvas: capa estática precalculada + objetos animados + jugador + partículas.
 import { T, SOLID } from '../levels/tiles.js';
-import { drawPlayer, resolveColor } from '../entities/Skins.js';
+import { drawPlayer, resolveColor, getSkin } from '../entities/Skins.js';
+import { ghostAt } from '../game/Ghost.js';
 import { Backdrop } from './Backdrop.js';
 import { t } from '../core/I18n.js';
 
@@ -617,6 +618,18 @@ export class Renderer {
       ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r * 0.75, cy); ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r * 0.75, cy); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#FFF4CC';
       ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx - r * 0.75, cy); ctx.lineTo(cx, cy); ctx.closePath(); ctx.fill();
+    }
+
+    // Yo dibujo el fantasma del mejor intento, translúcido, para correr contra él.
+    if (game.ghost && game.started) {
+      const f = ghostAt(game.ghost, game.time);
+      if (f && f.alive) {
+        const st = { x: f.x, y: f.y, w: 0.72, h: 0.82, vx: f.vx, vy: f.vy, facing: f.facing, sqX: 1, sqY: 1, blinkSeed: 1.7 };
+        ctx.save();
+        if (f.g < 0) { const cy = cam.sy(f.y + st.h / 2); ctx.translate(0, cy * 2); ctx.scale(1, -1); }
+        drawPlayer(ctx, this.ghostSkin || (this.ghostSkin = { ...getSkin('fantasma'), alpha: 0.38 }), st, cam.sx(f.x + st.w / 2), cam.sy(f.y + st.h), tile, time);
+        ctx.restore();
+      }
     }
 
     // Yo dibujo al jugador si está vivo.

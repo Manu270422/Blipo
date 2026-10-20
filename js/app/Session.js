@@ -8,6 +8,8 @@ import { dateKey, dailyNumber } from '../game/Daily.js';
 import { getSkin } from '../entities/Skins.js';
 import { resultStats } from '../ui/views/ResultView.js';
 import { shareText } from './Share.js';
+import { decodeGhost, ghostStore } from '../game/Ghost.js';
+import { medalTimes, nextMedal } from '../game/Medals.js';
 
 export class Session {
   // Yo recibo el contexto de la app con todas las dependencias.
@@ -34,7 +36,7 @@ export class Session {
     // Yo recuerdo el último nivel abierto para el botón "Jugar".
     this.storage.data.last = { world: w, level: l };
     const label = `${w + 1}-${l + 1}`;
-    this.withTutorial(() => this.begin(level, { label, mode: 'gems', slots: 3 }));
+    this.withTutorial(() => this.begin(level, { label, mode: 'gems', slots: 3 }, null, { ghostId: level.id, medals: medalTimes(level) }));
   }
 
   // Yo arranco el reto diario del día (mismo nivel para todo el mundo).
@@ -43,7 +45,7 @@ export class Session {
     const level = getDailyLevel(key);
     this.mode = 'daily';
     this.ctx = { key, level, n: dailyNumber() };
-    this.withTutorial(() => this.begin(level, { label: t('daily_label', { n: this.ctx.n }), mode: 'gems', slots: 3 }));
+    this.withTutorial(() => this.begin(level, { label: t('daily_label', { n: this.ctx.n }), mode: 'gems', slots: 3 }, null, { ghostId: `daily-${key}` }));
   }
 
   // Yo arranco una carrera nueva de supervivencia con semilla aleatoria.
@@ -72,7 +74,7 @@ export class Session {
   }
 
   // Yo cargo el nivel en el motor y preparo HUD, música y controles.
-  begin(level, hud, lives = null) {
+  begin(level, hud, lives = null, { ghostId = null, medals = null } = {}) {
     const { app } = this;
     const s = this.storage.data.settings;
     app.screens.show('game', { remember: false });
@@ -80,7 +82,9 @@ export class Session {
     app.touch.release();
     app.hud.setup(hud);
     app.hud.showTimer(s.showTimer);
-    this.game.load(level, { skin: getSkin(this.storage.data.skins.equipped), highContrast: s.highContrast, lives });
+    // Yo cargo el fantasma del mejor intento (si el jugador lo quiere ver) y los tiempos de medalla.
+    const ghost = ghostId && s.showGhost ? decodeGhost(ghostStore.load(ghostId)) : null;
+    this.game.load(level, { skin: getSkin(this.storage.data.skins.equipped), highContrast: s.highContrast, lives, ghost, medals });
     app.audio.playMusic(level.music || 'w0');
     // Yo explico la mecánica nueva del nivel con un aviso corto.
     if (level.hint) bus.emit('toast', { key: level.hint, icon: 'i-spark' });
@@ -158,6 +162,13 @@ export class Session {
     const { w, l, level } = this.ctx;
     const worldsBefore = WORLDS.filter((x) => this.progress.isWorldUnlocked(x.id)).length;
     const res = this.progress.saveCampaign(w, l, level, summary);
+    // Yo guardo el fantasma si este fue el mejor intento (o el primero).
+    if ((res.isRecord || res.firstClear) && summary.recording) ghostStore.save(level.id, summary.recording);
+    // Yo sumo progreso a las misiones del día.
+    app.trackMission('levelClears');
+    if (summary.deaths === 0) app.trackMission('flawlessClears');
+    if (res.medal >= 2) app.trackMission('silverRuns');
+    if (res.isRecord) app.trackMission('records');
     const worldsAfter = WORLDS.filter((x) => this.progress.isWorldUnlocked(x.id));
     // Yo celebro si se abrió un mundo nuevo.
     if (worldsAfter.length > worldsBefore) {
@@ -167,6 +178,9 @@ export class Session {
     const rewards = [];
     if (res.sparks > 0) rewards.push({ text: t('reward_sparks', { n: res.sparks }) });
     if (res.isRecord) rewards.push({ icon: 'i-clock', text: t('reward_record'), record: true });
+    // Yo celebro la medalla nueva o digo cuánto falta para la siguiente (el "una más").
+    const goal = nextMedal(res.times, summary.time);
+    const target = goal ? t('medal_missing', { s: goal.missing.toFixed(1), medal: t(`medal_${goal.medal}`) }) : t('medal_all');
     const next = this.progress.next(w, l);
     const canNext = next && this.progress.isWorldUnlocked(next.w);
     if (!next) setTimeout(() => app.toast.show(t('game_complete'), { icon: 'i-trophy', variant: 'achievement' }), 900);
@@ -181,6 +195,9 @@ export class Session {
     app.result.show({
       title: t('level_clear'),
       stars: res.stars,
+      medal: res.medal,
+      newMedal: res.newMedal,
+      target,
       stats: resultStats({ time: summary.time, deaths: summary.deaths, par: level.par, gems: summary.gems }),
       rewards,
       actions,
@@ -192,6 +209,12 @@ export class Session {
     const { app } = this;
     const { level, n } = this.ctx;
     const res = this.progress.saveDaily(summary, level.par);
+    // Yo guardo el fantasma del mejor intento de hoy y borro los de días anteriores.
+    if (summary.recording && res.best && res.best.time === summary.time) {
+      ghostStore.save(`daily-${this.ctx.key}`, summary.recording);
+      ghostStore.pruneDaily(`daily-${this.ctx.key}`);
+    }
+    app.trackMission('dailyClears');
     const rewards = [];
     if (res.sparks > 0) rewards.push({ text: t('reward_sparks', { n: res.sparks }) });
     rewards.push({ icon: 'i-flame', text: t('reward_streak', { n: res.streak }), record: res.streakUp });
@@ -220,6 +243,7 @@ export class Session {
   completeRoom(summary) {
     const c = this.ctx;
     c.room += 1;
+    this.app.trackMission('survivalRooms');
     c.totalTime += summary.time;
     c.totalDeaths += summary.deaths;
     this.app.toast.show(t('room_clear', { n: c.room }), { icon: 'i-check' });

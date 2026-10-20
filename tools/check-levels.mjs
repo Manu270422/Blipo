@@ -1,8 +1,10 @@
 // Yo compruebo que cada nivel hecho a mano se puede terminar y que sus 3 gemas son alcanzables.
 // Yo uso la misma física del juego (Player + TileMap) y busco una ruta con A* sobre las entradas del jugador.
 // Uso: node tools/check-levels.mjs            → revisa todos los mundos hechos a mano
+//      node tools/check-levels.mjs --medals   → además reescribe los tiempos de oro (js/levels/medals.js)
 //      node tools/check-levels.mjs 2 4        → revisa solo el nivel 5 del mundo 3
 import { pathToFileURL } from 'node:url';
+import { writeFileSync } from 'node:fs';
 import { GAME, PHYS } from '../js/config.js';
 import { TileMap } from '../js/engine/TileMap.js';
 import { Player } from '../js/entities/Player.js';
@@ -307,12 +309,31 @@ export function checkLevel(level) {
   return out;
 }
 
+// Yo escribo js/levels/medals.js con el tiempo de oro de cada nivel (ruta × 1.3 + 1.5, a medio segundo).
+function writeMedals(rows) {
+  const out = [
+    '// Yo guardo el tiempo de la medalla de oro de cada nivel (en segundos).',
+    '// Yo salgo del recorrido verificado por tools/check-levels.mjs: oro = ruta × 1.3 + 1.5, redondeado a medio segundo.',
+    '// Yo me regenero con: node tools/check-levels.mjs --medals',
+    '',
+    'export const GOLD = {',
+    ...rows.map((r) => `  '${r.id}': ${Math.ceil((r.best * 1.3 + 1.5) * 2) / 2}, // ${r.name}`),
+    '};',
+    '',
+  ];
+  writeFileSync(new URL('../js/levels/medals.js', import.meta.url), out.join('\n'));
+  console.log(`✔ Medallas de oro escritas para ${rows.length} niveles`);
+}
+
 // Yo recorro los mundos hechos a mano (o solo el nivel pedido por argumentos).
 function main() {
-  const [wArg, lArg] = process.argv.slice(2).map(Number);
+  const args = process.argv.slice(2);
+  const medals = args.includes('--medals');
+  const [wArg, lArg] = args.filter((a) => !a.startsWith('--')).map(Number);
   let failed = 0;
+  const rows = [];
   for (const world of WORLDS) {
-    if (world.source !== 'hand' || (!Number.isNaN(wArg) && wArg !== undefined && world.id !== wArg)) continue;
+    if (world.source !== 'hand' || (wArg !== undefined && !Number.isNaN(wArg) && world.id !== wArg)) continue;
     for (let l = 0; l < world.count; l++) {
       if (lArg !== undefined && !Number.isNaN(lArg) && l !== lArg) continue;
       const level = getCampaignLevel(world.id, l);
@@ -320,10 +341,13 @@ function main() {
       const r = checkLevel(level);
       const secs = ((Date.now() - t0) / 1000).toFixed(1);
       if (!r.ok) failed++;
+      else rows.push(r);
       const best = r.best != null ? `ruta ${r.best.toFixed(1)}s · par ${level.par}s` : '';
       console.log(`${r.ok ? '✔' : '✘'} ${r.id} ${r.name || ''} [${r.size}] ${best} (${secs}s)${r.notes.length ? `\n    → ${r.notes.join('\n    → ')}` : ''}`);
     }
   }
+  // Yo solo reescribo las medallas si revisé la campaña completa y todo pasó.
+  if (medals && !failed && wArg === undefined) writeMedals(rows);
   process.exit(failed ? 1 : 0);
 }
 

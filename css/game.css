@@ -68,6 +68,20 @@
 .result-stats dt { font-size: var(--fs-xs); color: var(--muted); font-weight: 800; }
 .result-stats dd { margin: 0; font-family: var(--font-display); font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
 .result-stats .is-good dd { color: var(--teal); }
+/* Yo muestro la medalla de tiempo con su metal y el objetivo siguiente. */
+.medal-row { display: flex; justify-content: center; margin: calc(var(--sp-2) * -1) 0 var(--sp-2); }
+.medal { display: inline-flex; align-items: center; gap: .4em; padding: .3em .9em .3em .5em; border-radius: var(--r-pill); font-family: var(--font-display); font-size: var(--fs-md); background: rgba(255,255,255,.06); color: var(--muted); animation: star-in .45s .5s cubic-bezier(.2, 1.6, .4, 1) both; }
+.medal .icon { width: 1.5em; height: 1.5em; }
+.medal--bronze { color: #E0915A; background: rgba(224,145,90,.14); }
+.medal--silver { color: #D6DDEA; background: rgba(214,221,234,.14); }
+.medal--gold { color: var(--gold); background: rgba(255,194,61,.16); }
+.medal__new { margin-left: .5em; padding: .1em .5em; border-radius: var(--r-pill); background: var(--teal); color: var(--ink); font-style: normal; font-family: var(--font-body); font-weight: 900; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .04em; }
+.result-target { text-align: center; color: var(--muted); font-weight: 800; font-size: var(--fs-sm); margin: 0 0 var(--sp-2); }
+/* Yo pinto el cronómetro con el color de la medalla que va logrando el jugador. */
+.hud__stat.pace-gold { color: var(--gold); box-shadow: inset 0 0 0 2px rgba(255,194,61,.5); }
+.hud__stat.pace-silver { color: #D6DDEA; box-shadow: inset 0 0 0 2px rgba(214,221,234,.4); }
+.hud__stat.pace-bronze { color: #E0915A; box-shadow: inset 0 0 0 2px rgba(224,145,90,.4); }
+.hud__stat.pace-none { color: var(--muted); }
 .reward { display: flex; justify-content: center; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-3); min-height: 1px; }
 .reward span { display: inline-flex; align-items: center; gap: .35em; padding: .3em .8em; border-radius: var(--r-pill); background: rgba(255,194,61,.14); color: var(--gold); font-weight: 900; font-size: var(--fs-sm); }
 .reward span.record { background: rgba(45,225,194,.14); color: var(--teal); }

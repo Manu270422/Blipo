@@ -3,13 +3,15 @@ import { t } from '../../core/I18n.js';
 import { formatNumber } from '../../core/Format.js';
 import { WORLDS } from '../../levels/worlds.js';
 import { dailyNumber, msToNextDaily } from '../../game/Daily.js';
+import { missionText } from '../../game/Missions.js';
 
 export class MenuView {
   // Yo guardo las dependencias y los nodos.
-  constructor({ root, storage, progress }) {
+  constructor({ root, storage, progress, missions }) {
     this.root = root;
     this.storage = storage;
     this.progress = progress;
+    this.missions = missions;
     this.q = (sel) => root.querySelector(`[data-screen="menu"] ${sel}`);
   }
 
@@ -34,5 +36,23 @@ export class MenuView {
     this.q('[data-bind="survival-sub"]').textContent = t('survival_sub', { n: d.survival.best });
     // Yo marco logros nuevos sin ver.
     this.q('[data-bind="ach-dot"]').hidden = !this.storage.data._newAch;
+    this.renderMissions();
+  }
+
+  // Yo pinto las tres misiones del día con su barra de progreso y premio.
+  renderMissions() {
+    const today = this.missions.today();
+    const done = today.list.filter((m) => m.done).length;
+    const hrs = Math.ceil(msToNextDaily() / 3600000);
+    this.q('[data-bind="missions-sub"]').textContent = done === today.list.length ? t('missions_all_done', { h: hrs }) : t('missions_progress', { n: done, max: today.list.length });
+    this.q('[data-list="missions"]').innerHTML = today.list.map((m) => `
+      <li class="mission ${m.done ? 'is-done' : ''}">
+        <span class="mission__check"><svg class="icon"><use href="#i-check"/></svg></span>
+        <span class="mission__body">
+          <span class="mission__text">${missionText(t, m)} <small>${m.progress}/${m.goal}</small></span>
+          <span class="mission__bar"><i style="width:${Math.round((m.progress / m.goal) * 100)}%"></i></span>
+        </span>
+        <span class="mission__reward"><svg class="icon"><use href="#i-spark"/></svg>${m.reward}</span>
+      </li>`).join('');
   }
 }

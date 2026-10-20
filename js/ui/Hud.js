@@ -21,6 +21,7 @@ export class Hud {
     this.center.innerHTML = Array.from({ length: slots }, () => `<svg class="icon ${mode === 'lives' ? 'heart' : ''}"><use href="#${icon}"/></svg>`).join('');
     this.icons = [...this.center.children];
     this.cache = {};
+    this.timerWrap.classList.remove('pace-gold', 'pace-silver', 'pace-bronze', 'pace-none');
   }
 
   // Yo muestro u oculto el cronómetro.
@@ -31,6 +32,12 @@ export class Hud {
     if (!game.map) return;
     const time = formatTime(game.time);
     if (time !== this.cache.time) { this.time.textContent = time; this.cache.time = time; }
+    // Yo coloreo el cronómetro según la medalla que va logrando (oro, plata, bronce o ninguna).
+    if (game.medals) {
+      const m = game.medals, tm = game.time;
+      const pace = tm <= m.gold ? 'gold' : tm <= m.silver ? 'silver' : tm <= m.bronze ? 'bronze' : 'none';
+      if (pace !== this.cache.pace) { this.timerWrap.classList.remove(`pace-${this.cache.pace}`); this.timerWrap.classList.add(`pace-${pace}`); this.cache.pace = pace; }
+    } else if (this.cache.pace) { this.timerWrap.classList.remove(`pace-${this.cache.pace}`); this.cache.pace = null; }
     if (game.deaths !== this.cache.deaths) { this.deaths.textContent = game.deaths; this.cache.deaths = game.deaths; }
     // Yo calculo la firma de gemas o vidas.
     const sig = this.mode === 'lives' ? `l${game.lives}` : game.map.gems.map((g) => (g.taken ? 1 : 0)).join('');

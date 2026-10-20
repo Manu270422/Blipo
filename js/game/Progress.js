@@ -3,6 +3,7 @@ import { GAME, ECONOMY } from '../config.js';
 import { WORLDS, levelKey } from '../levels/worlds.js';
 import { SKINS } from '../entities/Skins.js';
 import { dateKey, yesterdayKey } from './Daily.js';
+import { medalTimes, medalFor } from './Medals.js';
 
 export class Progress {
   // Yo trabajo sobre el guardado compartido.
@@ -24,6 +25,9 @@ export class Progress {
 
   // Yo sumo todas las estrellas ganadas.
   totalStars() { return Object.values(this.data.progress.levels).reduce((a, r) => a + (r.stars || 0), 0); }
+
+  // Yo cuento los niveles con al menos cierta medalla de tiempo.
+  countMedals(min) { return Object.values(this.data.progress.levels).filter((r) => (r.medal || 0) >= min).length; }
 
   // Yo sumo todas las gemas encontradas.
   totalGems() { return Object.values(this.data.progress.levels).reduce((a, r) => a + (r.gems || []).filter(Boolean).length, 0); }
@@ -54,7 +58,12 @@ export class Progress {
   // Yo guardo el resultado de un nivel de campaña y devuelvo lo ganado.
   saveCampaign(w, l, level, result) {
     const key = levelKey(w, l);
-    const prev = this.data.progress.levels[key] || { stars: 0, bestTime: null, bestDeaths: null, gems: [false, false, false], cleared: false };
+    const prev = { medal: 0, ...(this.data.progress.levels[key] || { stars: 0, bestTime: null, bestDeaths: null, gems: [false, false, false], cleared: false }) };
+    // Yo calculo la medalla de tiempo y pago cada medalla nueva una sola vez.
+    const times = medalTimes(level);
+    const medal = medalFor(times, result.time);
+    let medalSparks = 0;
+    for (let m = prev.medal + 1; m <= medal; m++) medalSparks += ECONOMY.MEDAL[m];
     const stars = Progress.stars(level.par, result.time, result.deaths);
     // Yo calculo lo nuevo para pagar solo mejoras (evito "farmear" el mismo nivel).
     const newStars = Math.max(0, stars - prev.stars);
@@ -68,15 +77,17 @@ export class Progress {
       bestDeaths: prev.bestDeaths == null ? result.deaths : Math.min(prev.bestDeaths, result.deaths),
       gems,
       cleared: true,
+      medal: Math.max(medal, prev.medal),
     };
-    const sparks = newStars * ECONOMY.PER_STAR + newGems * ECONOMY.PER_GEM;
+    const sparks = newStars * ECONOMY.PER_STAR + newGems * ECONOMY.PER_GEM + medalSparks;
+    if (isRecord) this.data.stats.records = (this.data.stats.records || 0) + 1;
     this.data.wallet.sparks += sparks;
     this.data.stats.levelsCleared += 1;
     this.data.stats.gems += Math.max(0, newGems);
     if (result.deaths === 0) this.data.stats.flawless += 1;
     this.data.last = this.next(w, l) ? { world: this.next(w, l).w, level: this.next(w, l).l } : { world: w, level: l };
     this.store.save();
-    return { stars, newStars, newGems, sparks, bestTime, isRecord, firstClear: !prev.cleared };
+    return { stars, newStars, newGems, sparks, bestTime, isRecord, firstClear: !prev.cleared, medal, newMedal: medal > prev.medal, times };
   }
 
   // Yo guardo el resultado del reto diario y actualizo la racha.

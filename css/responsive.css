@@ -3,7 +3,9 @@
 /* ---------- Teléfonos en vertical y tabletas estrechas ---------- */
 @media (max-width: 820px) and (orientation: portrait) {
   /* Yo apilo marca y acciones en una sola columna. */
-  .menu { grid-template-columns: 1fr; align-content: center; gap: var(--sp-4); }
+  .menu { grid-template-columns: 1fr; grid-template-areas: 'brand' 'actions' 'missions'; align-content: safe center; gap: var(--sp-4); }
+  .menu__brand { align-self: center; }
+  .missions { width: min(460px, 100%); }
   .menu__actions { width: min(460px, 100%); margin-inline: auto; }
   .logo--menu { font-size: clamp(3rem, 16vw, 5rem); }
   /* Yo agrando el HUD a la zona táctil en vertical. */
@@ -24,6 +26,8 @@
   .tagline { margin-top: .5em; font-size: var(--fs-sm); }
   .btn--xl { min-height: 52px; }
   .mode-card { min-height: 52px; padding: .45em .8em; }
+  .missions { padding: var(--sp-2) var(--sp-3); }
+  .missions__list { gap: 6px; }
   .mode-card__icon { width: 30px; height: 30px; }
   .tile-btn { padding: .45em .2em; }
   .tile-btn .icon { width: 22px; height: 22px; }

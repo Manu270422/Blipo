@@ -1,7 +1,7 @@
 // Yo soy el service worker de BLIPO: guardo el juego en caché para jugar sin conexión.
 
 // Yo versiono el caché; subo este número cada vez que publico cambios.
-const VERSION = 'blipo-v1.5.0';
+const VERSION = 'blipo-v1.6.0';
 
 // Yo listo todo lo que el juego necesita para funcionar offline.
 const ASSETS = [
@@ -44,7 +44,10 @@ const ASSETS = [
   './js/entities/Skins.js',
   './js/game/Achievements.js',
   './js/game/Daily.js',
+  './js/game/Ghost.js',
   './js/game/Game.js',
+  './js/game/Medals.js',
+  './js/game/Missions.js',
   './js/game/Progress.js',
   './js/i18n/en.js',
   './js/i18n/es.js',
@@ -53,6 +56,7 @@ const ASSETS = [
   './js/levels/caves.js',
   './js/levels/foundry.js',
   './js/levels/glacier.js',
+  './js/levels/medals.js',
   './js/levels/generator.js',
   './js/levels/tiles.js',
   './js/levels/void.js',

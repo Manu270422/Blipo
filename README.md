@@ -68,6 +68,10 @@ Corre en el navegador, se instala como **PWA**, funciona **offline** y se empaqu
 **🧩 Contenido**
 - 59 niveles en 5 mundos, todos diseñados a mano y verificados con `npm run check:levels`
 - Un jefe al final de cada mundo: Gólem de roca, Araña reina, Horno colosal, Yeti de hielo y Ojo del vacío
+- Medallas de tiempo (bronce, plata y oro) en cada nivel; el oro sale del recorrido verificado y el cronómetro cambia de color según la medalla que vas logrando
+- Fantasma de tu mejor intento: compites contra tu propio récord en cada nivel y en el reto diario
+- Tres misiones nuevas cada día con premio en chispas y bono por completarlas todas
+- Mapa de cada mundo con el camino entre niveles, Blipo marcando el siguiente y el jefe al final
 - Vacío con mecánicas propias: orbes que invierten la gravedad, interruptores que alternan bloques y bloques de ritmo
 - Cavernas con mecánicas propias: hongos saltarines, telarañas que frenan la caída y cuevas oscuras con cristales que iluminan
 - Fundición con mecánicas propias: cintas transportadoras, llamaradas con ritmo y plataformas móviles
@@ -75,7 +79,7 @@ Corre en el navegador, se instala como **PWA**, funciona **offline** y se empaqu
 - Mapas de tamaño libre (anchos y altos) con cámara que sigue a Blipo y fondos con paralaje por mundo
 - Reto diario: mismo nivel para todos, racha 🔥, premio creciente y botón para compartir
 - Supervivencia: salas infinitas cada vez más difíciles, 5 vidas
-- 17 logros y estadísticas de progreso
+- 23 logros y estadísticas de progreso
 
 </td>
 <td width="50%" valign="top">

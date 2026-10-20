@@ -19,6 +19,7 @@ export function defaultSave() {
       showTimer: true,       // Yo muestro el cronómetro en el HUD.
       reducedMotion: false,  // Yo reduzco partículas y efectos si el jugador lo pide.
       highContrast: false,   // Yo ofrezco un modo de alto contraste.
+      showGhost: true,       // Yo muestro el fantasma del mejor intento.
     },
     // Yo guardo el progreso por nivel con la llave "w{mundo}-l{nivel}".
     progress: { levels: {} },
@@ -39,6 +40,8 @@ export function defaultSave() {
     achievements: {},
     // Yo recuerdo si ya vio el tutorial.
     onboarded: false,
+    // Yo guardo las misiones del día (se regeneran al cambiar la fecha).
+    missions: null,
     // Yo recuerdo el último nivel jugado para el botón "Continuar".
     last: { world: 0, level: 0 },
   };
