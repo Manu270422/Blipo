@@ -84,7 +84,7 @@ export class Session {
     app.hud.showTimer(s.showTimer);
     // Yo cargo el fantasma del mejor intento (si el jugador lo quiere ver) y los tiempos de medalla.
     const ghost = ghostId && s.showGhost ? decodeGhost(ghostStore.load(ghostId)) : null;
-    this.game.load(level, { skin: getSkin(this.storage.data.skins.equipped), highContrast: s.highContrast, lives, ghost, medals });
+    this.game.load(level, { skin: getSkin(this.storage.data.skins.equipped), highContrast: s.highContrast, lives, ghost, medals, look: app.wardrobe.look() });
     app.audio.playMusic(level.music || 'w0');
     // Yo explico la mecánica nueva del nivel con un aviso corto.
     if (level.hint) bus.emit('toast', { key: level.hint, icon: 'i-spark' });

@@ -19,9 +19,9 @@ blipo/
 │   ├── core/               EventBus, Loop (120 Hz fijo), Storage, I18n, Random, Format
 │   ├── systems/            Input (teclado/táctil/mando), Audio (sintetizado), Haptics
 │   ├── engine/             TileMap, Physics, Camera, Particles, Renderer, Backdrop (fondo con paralaje)
-│   ├── entities/           Player (coyote time, buffer, doble salto, wall jump), Mover (plataforma móvil), Boss (jefe con línea de tiempo fija), Skins
+│   ├── entities/           Player (coyote time, buffer, doble salto, wall jump), Mover (plataforma móvil), Boss (jefe con línea de tiempo fija), Hats (dibujo de sombreros), Skins
 │   ├── levels/             tiles, bosses (jefes y arenas), campaign (Cantera), caves (Cavernas), foundry (Fundición), glacier (Glaciar), void (Vacío), generator (reto diario y supervivencia), worlds
-│   ├── game/               Game (partida), Progress, Achievements, Daily, Medals (medallas de tiempo), Ghost (fantasma del mejor intento), Missions (misiones del día)
+│   ├── game/               Game (partida), Progress, Achievements, Daily, Medals (medallas de tiempo), Ghost (fantasma del mejor intento), Missions (misiones del día), Cosmetics (sombreros, estelas y explosiones)
 │   ├── ui/                 ScreenManager, Hud, TouchControls, Toast, Dialog, Mascot
 │   │   └── views/          Una vista por pantalla
 │   └── i18n/               es.js, en.js
@@ -44,6 +44,7 @@ blipo/
 - **Una misión diaria:** agrega una entrada en `MISSION_POOL` (`js/game/Missions.js`) con la estadística que cuenta, metas, premio y condición de disponibilidad, y su texto `mission_<id>`.
 - **Verificar niveles:** `npm run check:levels` (o `node tools/check-levels.mjs <mundo> <nivel>`) juega cada nivel hecho a mano con la física real y confirma que tiene salida y que las 3 gemas se pueden recoger. En las arenas derrota al jefe golpe por golpe antes de buscar la salida.
 - **Un mundo:** agrega una entrada en `WORLDS` (`js/levels/worlds.js`) y su llave de texto.
+- **Un cosmético:** agrégalo en `COSMETICS` (`js/game/Cosmetics.js`) con `price` (chispas) o `unlock` (meta: `gold`, `missions`, `boss`, `bosses`, `streak`, `flawless`, `stars`), su dibujo (sombrero en `Hats.js`, estela en `emitTrail`, explosión en `emitBurst`) y su texto `cos_<tipo>_<id>`.
 - **Una skin:** agrega en `SKINS` (`js/entities/Skins.js`) y `skin_<id>` en `i18n`.
 - **Un logro:** agrega en `ACHIEVEMENTS` con `goal` y `value()`, y sus textos `ach_<id>` / `ach_<id>_d`.
 - **Un idioma:** crea `js/i18n/xx.js`, regístralo en `core/I18n.js` y añade la opción en Ajustes.

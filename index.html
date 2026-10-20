@@ -115,7 +115,7 @@
           </button>
           <nav class="menu__grid" aria-label="Secciones">
             <button class="tile-btn" data-nav="worlds" type="button"><svg class="icon"><use href="#i-star"/></svg><span data-i18n="levels">Niveles</span></button>
-            <button class="tile-btn" data-nav="shop" type="button"><svg class="icon"><use href="#i-bag"/></svg><span data-i18n="shop">Tienda</span></button>
+            <button class="tile-btn" data-nav="shop" type="button"><svg class="icon"><use href="#i-bag"/></svg><span data-i18n="shop">Tienda</span><i class="dot" data-bind="shop-dot" hidden></i></button>
             <button class="tile-btn" data-nav="achievements" type="button"><svg class="icon"><use href="#i-trophy"/></svg><span data-i18n="achievements">Logros</span><i class="dot" data-bind="ach-dot" hidden></i></button>
             <button class="tile-btn" data-nav="stats" type="button"><svg class="icon"><use href="#i-chart"/></svg><span data-i18n="stats">Estadísticas</span></button>
           </nav>
@@ -156,7 +156,8 @@
         <div class="wallet"><svg class="icon"><use href="#i-spark"/></svg><span data-bind="sparks">0</span></div>
       </header>
       <div class="scroll">
-        <p class="hint" data-i18n="shop_hint">Gana chispas con estrellas, gemas, logros y el reto diario.</p>
+        <div class="shop-tabs" role="tablist" data-list="shop-tabs"></div>
+        <p class="hint" data-bind="shop-hint" data-i18n="shop_hint">Gana chispas con estrellas, gemas, logros y el reto diario.</p>
         <div class="skin-grid" data-list="skins"></div>
       </div>
     </section>
@@ -224,7 +225,7 @@
               <button class="btn btn--small btn--danger" data-action="reset" type="button" data-i18n="reset_progress">Borrar progreso</button>
             </div>
           </fieldset>
-          <p class="credits"><span data-i18n="credits">Creado por Carlos Manuel Turizo Hernández · El Mundo de Manu</span><br /><span class="version">v1.6.0</span></p>
+          <p class="credits"><span data-i18n="credits">Creado por Carlos Manuel Turizo Hernández · El Mundo de Manu</span><br /><span class="version">v1.7.0</span></p>
         </form>
       </div>
     </section>
