@@ -225,7 +225,7 @@
               <button class="btn btn--small btn--danger" data-action="reset" type="button" data-i18n="reset_progress">Borrar progreso</button>
             </div>
           </fieldset>
-          <p class="credits"><span data-i18n="credits">Creado por Carlos Manuel Turizo Hernández · El Mundo de Manu</span><br /><span class="version">v1.7.0</span></p>
+          <p class="credits"><span data-i18n="credits">Creado por Carlos Manuel Turizo Hernández · El Mundo de Manu</span><br /><span class="version">v1.8.0</span></p>
         </form>
       </div>
     </section>
@@ -243,6 +243,12 @@
           <span class="hud__stat" title="Muertes"><svg class="icon"><use href="#i-skull"/></svg><b data-bind="hud-deaths">0</b></span>
           <span class="hud__stat" data-bind="hud-timer-wrap"><svg class="icon"><use href="#i-clock"/></svg><b data-bind="hud-time">00:00.0</b></span>
         </div>
+      </div>
+      <!-- Yo presento cada nivel con un cartel que entra y se va sin bloquear el juego. -->
+      <div class="level-banner" data-bind="level-banner" hidden aria-live="polite">
+        <small data-bind="banner-top"></small>
+        <strong data-bind="banner-title"></strong>
+        <span data-bind="banner-goal"></span>
       </div>
       <!-- Yo dibujo los controles táctiles (multitouch con Pointer Events). -->
       <div class="touch" data-touch aria-hidden="true">

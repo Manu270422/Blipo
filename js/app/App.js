@@ -205,6 +205,7 @@ export class App {
     this.fromPause = false;
     this.screens.resetStack();
     this.screens.show('menu', { remember: false });
+    this.audio.muffle(false);
     this.storage.flush();
   }
 
