@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">BLIPO</string>
+    <string name="title_activity_main">BLIPO</string>
+    <string name="package_name">com.elmundodemanu.blipo</string>
+    <string name="custom_url_scheme">com.elmundodemanu.blipo</string>
+</resources>

@@ -16,7 +16,7 @@
 ![PWA](https://img.shields.io/badge/PWA-instalable-2DE1C2?style=flat-square&logo=pwa&logoColor=white)
 ![Vanilla JS](https://img.shields.io/badge/JavaScript-ES_Modules-FFC23D?style=flat-square&logo=javascript&logoColor=1A1433)
 ![Canvas 2D](https://img.shields.io/badge/Render-Canvas_2D-4A3E8C?style=flat-square)
-![Capacitor](https://img.shields.io/badge/Android-Capacitor-4A3E8C?style=flat-square&logo=android&logoColor=white)
+![Capacitor](https://img.shields.io/badge/Android-Capacitor_8.6.2-4A3E8C?style=flat-square&logo=android&logoColor=white)
 ![Offline](https://img.shields.io/badge/Offline-Service_Worker-2DE1C2?style=flat-square)
 
 <br/>
@@ -34,6 +34,13 @@
 Corre en el navegador, se instala como **PWA**, funciona **offline** y se empaqueta como app nativa de Android con **Capacitor**. Todo construido desde cero, sin frameworks: HTML + CSS + JavaScript (ES Modules) puro sobre Canvas 2D.
 
 > 🎮 **Pruébalo en producción:** **[blipo.elmundodemanu.com](https://blipo.elmundodemanu.com)**
+
+### Android 1.8.0
+
+- Modo horizontal inmersivo, con cámara que sigue a Blipo y controles sobre el nivel. El HUD y los botones respetan el recorte de la pantalla.
+- **Continuar** abre un destino disponible. Los guardados parcialmente dañados recuperan los campos válidos.
+- El reto diario conserva su fecha al cruzar medianoche. **Compartir** incluye el enlace público de BLIPO.
+- Las salas de supervivencia usan plataformas firmes en la ruta principal y se pueden validar por semilla.
 
 <div align="center">
 
@@ -79,7 +86,7 @@ Corre en el navegador, se instala como **PWA**, funciona **offline** y se empaqu
 - Fundición con mecánicas propias: cintas transportadoras, llamaradas con ritmo y plataformas móviles
 - Glaciar con mecánicas propias: hielo resbaloso, carámbanos que caen, viento lateral, ráfagas y corrientes que elevan
 - Mapas de tamaño libre (anchos y altos) con cámara que sigue a Blipo y fondos con paralaje por mundo
-- Reto diario: mismo nivel para todos, racha 🔥, premio creciente y botón para compartir
+- Reto diario: mismo mapa para la misma fecha, racha 🔥, premio creciente y botón para compartir
 - Supervivencia: salas infinitas cada vez más difíciles, 5 vidas
 - 24 logros y estadísticas de progreso
 
@@ -116,14 +123,21 @@ npm run dev
 <details>
 <summary><strong>📦 Compilar y empaquetar para Android (Capacitor)</strong></summary>
 
+Requisitos de compilación. Node.js 22 o superior, JDK 21 y Android Studio Otter 2025.2.1 o posterior con Android SDK 36. La app apunta a API 36 y admite Android 7.0 (API 24) en adelante. [Requisitos de Capacitor 8](https://capacitorjs.com/docs/updating/8-0)
+
 ```bash
-npm run build:web   # genera el build web optimizado
-npm run cap:init    # agrega la plataforma Android (una sola vez)
-npm run cap:sync    # sincroniza el build con el proyecto nativo
-npm run cap:open    # abre el proyecto en Android Studio
+npm ci
+npm run cap:sync
+npm run cap:open
 ```
 
+Si tu copia aún carece de `package-lock.json`, ejecuta `npm install` la primera vez. `cap:init` sirve para un proyecto sin carpeta nativa. Si estás clonando la versión que incluye `android/`, usa los comandos de arriba.
+
+Pulsa **Run ▶** en Android Studio para instalar una compilación de depuración. Antes de publicar, genera el AAB firmado y aumenta `versionCode` con respecto a la última compilación subida a Play Console.
+
 </details>
+
+Para comprobar la salida y una ruta por cada gema de la sala 21 de supervivencia con semilla `0`, ejecuta `node tools/check-levels.mjs --survival 0 21`.
 
 ---
 
@@ -176,6 +190,7 @@ blipo/
 ├─ manifest.webmanifest  # Configuración PWA
 ├─ sw.js                 # Service worker (offline)
 ├─ capacitor.config.json # Empaquetado Android
+├─ android/              # Proyecto nativo, recursos y Gradle Wrapper
 ├─ css/                  # Tokens, componentes, pantallas, responsive
 ├─ js/
 │  ├─ core/   engine/   entities/   systems/
@@ -202,7 +217,7 @@ BLIPO está publicado y disponible para jugar en:
 
 </div>
 
-Instalable como PWA en cualquier dispositivo (Android, iOS, escritorio) y preparado para publicarse en **Play Store** vía Capacitor. Guía completa en [`docs/PLAY_STORE.md`](docs/PLAY_STORE.md).
+La edición web es instalable como PWA en navegadores compatibles. La edición Android está en preparación para pruebas y para su publicación en Google Play. [Guía de publicación](docs/PLAY_STORE.md)
 
 ---
 
@@ -224,4 +239,3 @@ Proyecto privado — todos los derechos reservados © Carlos Manuel Turizo Hern�
 <div align="center">
 <sub>Un ojo. Dos saltos. Cero excusas. 👁️</sub>
 </div>
-</content>

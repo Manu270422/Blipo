@@ -38,6 +38,8 @@ export function defaultSave() {
     },
     // Yo guardo los logros desbloqueados con su fecha.
     achievements: {},
+    _newAch: false,
+    _newCosmetic: false,
     // Yo recuerdo si ya vio el tutorial.
     onboarded: false,
     // Yo guardo los cosméticos: los que tiene ("tipo:id") y los que lleva puestos.
@@ -49,23 +51,88 @@ export function defaultSave() {
   };
 }
 
-// Yo fusiono recursivamente lo guardado sobre los valores por defecto.
-function deepMerge(base, saved) {
-  // Yo devuelvo la base si lo guardado no es un objeto válido.
-  if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return base;
-  // Yo recorro cada llave guardada.
-  for (const key of Object.keys(saved)) {
-    const b = base[key];
-    const s = saved[key];
-    // Yo fusiono objetos planos y reemplazo el resto.
-    if (b && typeof b === 'object' && !Array.isArray(b) && s && typeof s === 'object' && !Array.isArray(s)) {
-      base[key] = deepMerge(b, s);
-    } else if (s !== undefined) {
-      base[key] = s;
+const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+const isNumber = (value) => Number.isFinite(value) && value >= 0;
+const isCount = (value) => Number.isSafeInteger(value) && value >= 0;
+const isDay = (value) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+const entries = (value) => isObject(value) ? Object.entries(value) : [];
+
+function restoreDefaults(base, saved) {
+  if (!isObject(saved)) return base;
+  for (const [key, original] of Object.entries(base)) {
+    const value = saved[key];
+    if (isObject(original)) base[key] = restoreDefaults(original, value);
+    else if (Array.isArray(original) && Array.isArray(value)) {
+      base[key] = [...new Set([...original, ...value.filter((id) => typeof id === 'string')])];
+    } else if (typeof original === 'number' && isNumber(value)) base[key] = value;
+    else if (typeof original === 'boolean' && typeof value === 'boolean') base[key] = value;
+    else if (typeof original === 'string' && typeof value === 'string') base[key] = value;
+  }
+  return base;
+}
+
+function restoreSave(saved) {
+  const defaults = defaultSave();
+  const data = restoreDefaults(defaultSave(), saved);
+  const s = data.settings;
+  const lang = saved?.settings?.lang;
+  if (lang === 'es' || lang === 'en') s.lang = lang;
+  if (!['auto', 'on', 'off'].includes(s.touch)) s.touch = defaults.settings.touch;
+  for (const [key, min, max] of [
+    ['music', 0, 1], ['sfx', 0, 1], ['touchSize', 0.75, 1.4], ['touchOpacity', 0.25, 1],
+  ]) {
+    if (s[key] < min || s[key] > max) s[key] = defaults.settings[key];
+  }
+  if (!data.skins.owned.includes(data.skins.equipped)) data.skins.equipped = defaults.skins.equipped;
+
+  for (const [key, record] of entries(saved?.progress?.levels)) {
+    if (!/^w\d+-l\d+$/.test(key) || !isObject(record)) continue;
+    data.progress.levels[key] = {
+      stars: isCount(record.stars) && record.stars <= 3 ? record.stars : 0,
+      bestTime: isNumber(record.bestTime) ? record.bestTime : null,
+      bestDeaths: isCount(record.bestDeaths) ? record.bestDeaths : null,
+      gems: [0, 1, 2].map((i) => Array.isArray(record.gems) && record.gems[i] === true),
+      cleared: record.cleared === true,
+      medal: isCount(record.medal) && record.medal <= 3 ? record.medal : 0,
+    };
+  }
+
+  const daily = saved?.daily;
+  if (isDay(daily?.lastCompleted)) data.daily.lastCompleted = daily.lastCompleted;
+  for (const [day, record] of entries(daily?.results)) {
+    if (!isDay(day) || !isObject(record) || !isNumber(record.time)) continue;
+    data.daily.results[day] = {
+      time: record.time,
+      deaths: isCount(record.deaths) ? record.deaths : 0,
+      stars: isCount(record.stars) && record.stars <= 3 ? record.stars : 0,
+    };
+  }
+
+  data.stats = defaults.stats;
+  for (const [key, count] of entries(saved?.stats)) {
+    if (/^[a-z][a-zA-Z0-9]*$/.test(key) && key !== 'constructor' && (key === 'playTime' ? isNumber(count) : isCount(count))) {
+      data.stats[key] = count;
     }
   }
-  // Yo devuelvo la base ya fusionada.
-  return base;
+  for (const [id, date] of entries(saved?.achievements)) {
+    if (/^[a-z][a-z0-9_]*$/.test(id) && id !== 'constructor' && isCount(date)) data.achievements[id] = date;
+  }
+
+  const m = saved?.missions;
+  if (isDay(m?.day) && Array.isArray(m.list) && m.list.length > 0 && m.list.every((item) =>
+    typeof item?.id === 'string' && /^[a-z][a-z0-9_]*$/.test(item.id) && typeof item.stat === 'string' &&
+    isCount(item.goal) && item.goal > 0 && isCount(item.reward) &&
+    isCount(item.progress) && item.progress <= item.goal && typeof item.done === 'boolean'
+  )) {
+    data.missions = { day: m.day, list: m.list, bonus: m.bonus === true };
+  }
+
+  for (const section of ['wallet', 'survival', 'daily', 'last']) {
+    for (const [key, fallback] of Object.entries(defaults[section])) {
+      if (typeof fallback === 'number' && !isCount(data[section][key])) data[section][key] = fallback;
+    }
+  }
+  return data;
 }
 
 export class Storage {
@@ -86,7 +153,7 @@ export class Storage {
       if (!raw) return defaultSave();
       // Yo parseo y fusiono.
       const parsed = JSON.parse(raw);
-      return this.migrate(deepMerge(defaultSave(), parsed));
+      return this.migrate(restoreSave(parsed));
     } catch (err) {
       // Yo nunca bloqueo el juego por un guardado corrupto.
       console.warn('[storage] guardado inválido, reinicio', err);

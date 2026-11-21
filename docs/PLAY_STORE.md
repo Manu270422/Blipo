@@ -1,19 +1,17 @@
 # Publicar BLIPO en Google Play
 
 ## Opción recomendada: Capacitor (APK/AAB nativo)
-Requisitos: Node 18+, Android Studio, JDK 17.
+Para compilar usa Node.js 22 o superior, JDK 21 y Android Studio Otter 2025.2.1 o posterior con Android SDK 36.
 
 ```bash
-npm install
-npm run build:web        # copia el juego a /www
-npx cap add android      # solo la primera vez
-npx cap sync android
-npx cap open android     # abre Android Studio
+npm ci
+npm run cap:sync
+npm run cap:open
 ```
 
 En Android Studio:
 1. **Íconos:** clic derecho en `app` → *New → Image Asset* → usa `assets/icons/maskable-512.png` (fondo `#1A1433`).
-2. **Orientación y pantalla completa:** en `AndroidManifest.xml`, dentro de `<activity>`: `android:screenOrientation="fullUser"` y el tema *NoActionBar*.
+2. **Orientación y pantalla completa.** Comprueba `sensorLandscape` en el manifiesto y prueba el modo inmersivo en un teléfono antes de generar el AAB.
 3. **Versión:** en `app/build.gradle` sube `versionCode` y `versionName` en cada publicación.
 4. **Firmar:** *Build → Generate Signed Bundle / APK → Android App Bundle*. Guarda el `.jks` y sus contraseñas en un lugar seguro: sin él no puedes actualizar la app.
 5. Sube el `.aab` a Play Console.
@@ -31,14 +29,14 @@ Sube `assetlinks.json` a `/.well-known/` del dominio para quitar la barra del na
 
 ## Ficha de Play Store (textos listos)
 - **Nombre:** BLIPO: Un ojo, dos saltos
-- **Descripción corta (80):** Plataformas de precisión: reto diario, supervivencia y 59 niveles con 5 jefes. ¿Aguantas?
+- **Descripción corta.** Plataformas de precisión con 59 niveles, reto diario y supervivencia.
 - **Descripción larga:**
   Blipo tiene un solo ojo y dos saltos. Tú pones las excusas… o no.
   • 59 niveles en 5 mundos, cada uno con su jefe final: Cantera, Cavernas, Fundición, Glaciar y Vacío.
   • Reto diario: el mismo nivel para todo el mundo. Mantén tu racha y compártela.
   • Supervivencia: salas infinitas, 5 vidas, ¿hasta dónde llegas?
   • Doble salto, salto de pared, portales, resortes, bloques frágiles y sierras.
-  • 3 estrellas por nivel, gemas ocultas, 17 logros y 9 skins.
+  • 3 estrellas por nivel, gemas ocultas, 24 logros y 9 skins.
   • Controles táctiles ajustables, teclado y mando. Funciona sin internet.
 - **Categoría:** Juegos → Plataformas / Arcade · **Clasificación:** Para todos.
 - **Gráficos:** ícono 512×512 (`assets/icons/icon-512.png`), gráfico destacado 1024×500 (`assets/store/feature-graphic.png`), mínimo 2 capturas (tómalas del juego en horizontal 16:9).

@@ -71,11 +71,10 @@ export class Game {
   // Yo recalculo el encuadre (al cargar o al girar/redimensionar la pantalla).
   layout() {
     const r = this.renderer;
-    this.camera.resize(r.w, r.h, this.map ? this.map.cols : 40, this.map ? this.map.rows : 22, this.insets);
-    if (this.map) {
-      this.renderer.buildStatic(this.map, this.theme, this.camera.tile, this.level);
-      this.camera.follow(this.player.cx, this.player.cy, 0);
-    }
+    if (!this.map || !r.w || !r.h) return;
+    this.camera.resize(r.w, r.h, this.map.cols, this.map.rows, this.insets);
+    this.renderer.buildStatic(this.map, this.theme, this.camera.tile, this.level);
+    this.camera.follow(this.player.cx, this.player.cy, 0);
   }
 
   // Yo pauso o reanudo.

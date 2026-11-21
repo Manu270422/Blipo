@@ -3,8 +3,17 @@
   "appName": "BLIPO",
   "webDir": "www",
   "backgroundColor": "#1A1433",
+  "server": {
+    "androidScheme": "https"
+  },
   "android": {
     "allowMixedContent": false,
     "backgroundColor": "#1A1433"
+  },
+  "plugins": {
+    "SystemBars": {
+      "hidden": true,
+      "insetsHandling": "disable"
+    }
   }
 }

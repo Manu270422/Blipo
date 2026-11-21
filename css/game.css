@@ -1,11 +1,19 @@
 /* Yo doy estilo a todo lo que ocurre durante la partida. */
 
 /* Yo coloco el canvas detrás de todas las pantallas. */
-.game-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; touch-action: none; visibility: hidden; }
+.game-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 1;
+  touch-action: none;
+  visibility: hidden;
+}
 .app.in-game .game-canvas { visibility: visible; }
-/* Yo dejo pasar los toques al canvas en la pantalla de juego. */
-.screen--game { padding: 0; pointer-events: none; }
-.screen--game > * { pointer-events: auto; }
+.screen.screen--game { padding: 0; pointer-events: none; }
+.screen--game.is-active { animation: none; }
 
 /* ---------- HUD ---------- */
 .hud {
@@ -14,7 +22,7 @@
   padding: calc(var(--safe-t) + 8px) calc(var(--safe-r) + 12px) 0 calc(var(--safe-l) + 12px);
   pointer-events: none;
 }
-.hud > * { pointer-events: auto; }
+.hud .icon-btn--hud { pointer-events: auto; }
 .hud__left { display: flex; align-items: center; gap: var(--sp-3); min-width: 0; }
 .hud__right { display: flex; justify-content: flex-end; gap: var(--sp-2); }
 .icon-btn--hud { width: 44px; height: 44px; background: rgba(26, 20, 51, .75); box-shadow: inset 0 0 0 2px var(--line); }
@@ -30,7 +38,6 @@
 .hud__center .icon.on { color: var(--gold); transform: scale(1.15); }
 .hud__center .icon.heart.on { color: var(--coral); }
 
-/* Yo animo la interfaz: la calavera rebota al morir, la gema salta al recogerla y el cronómetro destella. */
 .hud__stat.is-bump { animation: hud-bump .35s cubic-bezier(.2, 1.6, .4, 1); }
 .hud__stat.is-bump .icon { color: var(--coral); }
 .hud__center .icon.is-pop { animation: hud-pop .4s cubic-bezier(.2, 1.8, .4, 1); }
@@ -39,7 +46,7 @@
 @keyframes hud-pop { 40% { transform: scale(1.7); } }
 @keyframes hud-flash { 0% { background: rgba(255,93,74,.7); } }
 
-/* Yo presento el nivel: el cartel baja, se queda un momento y se desvanece. */
+/* ---------- Cartel de nivel ---------- */
 .level-banner {
   position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%);
   display: grid; justify-items: center; gap: 2px; padding: var(--sp-3) var(--sp-5);
@@ -70,15 +77,14 @@
   pointer-events: none; opacity: var(--touch-opacity);
 }
 .touch.is-hidden { display: none; }
-/* Yo invierto el lado del salto para jugadores zurdos. */
 .touch.is-swapped { flex-direction: row-reverse; }
-.touch__move, .touch__jump { display: flex; gap: calc(14px * var(--touch-scale)); pointer-events: auto; }
+.touch__move, .touch__jump { display: flex; gap: calc(14px * var(--touch-scale)); }
 .touch__btn {
   display: grid; place-items: center;
   width: calc(76px * var(--touch-scale)); height: calc(76px * var(--touch-scale));
   border-radius: 22px; background: rgba(244, 238, 223, .14); color: var(--bone);
   box-shadow: inset 0 0 0 2px rgba(244,238,223,.28), 0 4px 0 rgba(0,0,0,.3);
-  touch-action: none; transition: transform .05s, background .05s;
+  pointer-events: auto; touch-action: none; transition: transform .05s, background .05s;
 }
 .touch__btn .icon { width: 40%; height: 40%; }
 .touch__btn--flip .icon { transform: scaleX(-1); }
@@ -100,7 +106,7 @@
 .result-stats dt { font-size: var(--fs-xs); color: var(--muted); font-weight: 800; }
 .result-stats dd { margin: 0; font-family: var(--font-display); font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
 .result-stats .is-good dd { color: var(--teal); }
-/* Yo muestro la medalla de tiempo con su metal y el objetivo siguiente. */
+
 .medal-row { display: flex; justify-content: center; margin: calc(var(--sp-2) * -1) 0 var(--sp-2); }
 .medal { display: inline-flex; align-items: center; gap: .4em; padding: .3em .9em .3em .5em; border-radius: var(--r-pill); font-family: var(--font-display); font-size: var(--fs-md); background: rgba(255,255,255,.06); color: var(--muted); animation: star-in .45s .5s cubic-bezier(.2, 1.6, .4, 1) both; }
 .medal .icon { width: 1.5em; height: 1.5em; }
@@ -109,11 +115,12 @@
 .medal--gold { color: var(--gold); background: rgba(255,194,61,.16); }
 .medal__new { margin-left: .5em; padding: .1em .5em; border-radius: var(--r-pill); background: var(--teal); color: var(--ink); font-style: normal; font-family: var(--font-body); font-weight: 900; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .04em; }
 .result-target { text-align: center; color: var(--muted); font-weight: 800; font-size: var(--fs-sm); margin: 0 0 var(--sp-2); }
-/* Yo pinto el cronómetro con el color de la medalla que va logrando el jugador. */
+
 .hud__stat.pace-gold { color: var(--gold); box-shadow: inset 0 0 0 2px rgba(255,194,61,.5); }
 .hud__stat.pace-silver { color: #D6DDEA; box-shadow: inset 0 0 0 2px rgba(214,221,234,.4); }
 .hud__stat.pace-bronze { color: #E0915A; box-shadow: inset 0 0 0 2px rgba(224,145,90,.4); }
 .hud__stat.pace-none { color: var(--muted); }
+
 .reward { display: flex; justify-content: center; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-3); min-height: 1px; }
 .reward span { display: inline-flex; align-items: center; gap: .35em; padding: .3em .8em; border-radius: var(--r-pill); background: rgba(255,194,61,.14); color: var(--gold); font-weight: 900; font-size: var(--fs-sm); }
 .reward span.record { background: rgba(45,225,194,.14); color: var(--teal); }

@@ -12,7 +12,8 @@ export class TutorialView {
     this.audio = audio;
     this.i = 0;
     this.onDone = null;
-    this.el.querySelector('[data-action="tut-next"]').addEventListener('click', () => this.next());
+    this.nextButton = this.el.querySelector('[data-action="tut-next"]');
+    this.nextButton.addEventListener('click', () => this.next());
     this.el.querySelector('[data-action="tut-skip"]').addEventListener('click', () => this.finish());
   }
 
@@ -22,7 +23,7 @@ export class TutorialView {
     this.onDone = onDone;
     this.i = 0;
     this.paint();
-    this.screens.open('tutorial');
+    this.screens.open('tutorial', { initialFocus: this.nextButton });
   }
 
   // Yo pinto el paso actual (texto distinto para táctil o teclado).
@@ -33,7 +34,7 @@ export class TutorialView {
     const txt = t(variant);
     this.el.querySelector('[data-bind="tut-text"]').textContent = txt === variant ? t(`tut_${step}_text`) : txt;
     this.el.querySelector('[data-bind="tut-dots"]').innerHTML = STEPS.map((_, k) => `<i class="${k === this.i ? 'on' : ''}"></i>`).join('');
-    this.el.querySelector('[data-action="tut-next"] span').textContent = this.i === STEPS.length - 1 ? t('lets_go') : t('next');
+    this.nextButton.querySelector('span').textContent = this.i === STEPS.length - 1 ? t('lets_go') : t('next');
   }
 
   // Yo avanzo o termino.
@@ -44,9 +45,10 @@ export class TutorialView {
 
   // Yo cierro y ejecuto el callback.
   finish() {
-    this.screens.close('tutorial');
+    if (!this.isOpen) return;
     const cb = this.onDone;
     this.onDone = null;
+    this.screens.close('tutorial');
     cb?.();
   }
 

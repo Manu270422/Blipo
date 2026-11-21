@@ -1,15 +1,16 @@
-// Yo compruebo que cada nivel hecho a mano se puede terminar y que sus 3 gemas son alcanzables.
+// Yo busco rutas a la salida y a cada gema en mapas de campaña y supervivencia.
 // Yo uso la misma física del juego (Player + TileMap) y busco una ruta con A* sobre las entradas del jugador.
 // Uso: node tools/check-levels.mjs            → revisa todos los mundos hechos a mano
 //      node tools/check-levels.mjs --medals   → además reescribe los tiempos de oro (js/levels/medals.js)
 //      node tools/check-levels.mjs 2 4        → revisa solo el nivel 5 del mundo 3
+//      node tools/check-levels.mjs --survival 0 21 3 → revisa las salas 21 a 23 de la semilla 0
 import { pathToFileURL } from 'node:url';
 import { writeFileSync } from 'node:fs';
 import { GAME, PHYS } from '../js/config.js';
 import { TileMap } from '../js/engine/TileMap.js';
 import { Player } from '../js/entities/Player.js';
 import { T, SOLID } from '../js/levels/tiles.js';
-import { WORLDS, getCampaignLevel } from '../js/levels/worlds.js';
+import { WORLDS, getCampaignLevel, getSurvivalLevel } from '../js/levels/worlds.js';
 
 const DT = GAME.STEP;
 // Yo excluyo del mapa de distancias las celdas que matan.
@@ -107,7 +108,7 @@ function key(n) {
   }
   // Yo recuerdo la gravedad, el interruptor, el ritmo de los bloques cercanos y qué orbes cercanos están listos.
   k += `,g${p.g},s${map.switchOn ? 1 : 0}`;
-  if (map.phases.some((b) => Math.abs(b.x + 0.5 - p.cx) < 6 && Math.abs(b.y + 0.5 - p.cy) < 6)) k += `,p${Math.round((((map.time % 3) + 3) % 3) / 0.1)}`;
+  if (map.phases.some((b) => Math.abs(b.x + 0.5 - p.cx) < 6 && Math.abs(b.y - p.cy) < 6)) k += `,p${Math.round((((map.time % 3) + 3) % 3) / 0.1)}`;
   for (const o of map.orbs) if (Math.abs(o.x + 0.5 - p.cx) < 3 && Math.abs(o.y + 0.5 - p.cy) < 3) k += o.armed ? ',o1' : ',o0';
   for (const sw of map.switches) if (Math.abs(sw.x + 0.5 - p.cx) < 2 && Math.abs(sw.y + 0.5 - p.cy) < 2) k += sw.armed ? ',q1' : ',q0';
   // Yo detallo los carámbanos cercanos (estado y altura) y de los lejanos solo si siguen colgando.
@@ -152,11 +153,11 @@ function distanceField(map, targets) {
   // Yo trato las corrientes de aire como apoyo: suben a Blipo.
   for (const w of map.winds) {
     if (w.dir !== 'up') continue;
-    for (let y = w.y; y < w.y + w.h; y++) for (let x = w.x; x < w.x + w.w; x++) if (x >= 0 && y >= 0 && x < cols && y < rows) support[y * cols + x] = 1;
+    for (let y = w.y; y < w.y + w.h; y++) for (let x = w.x; x < w.x + w.w; x++) if (x >= 0 && x < cols && y >= 0 && y < rows) support[y * cols + x] = 1;
   }
   for (const m of map.movers) {
     for (let y = Math.floor(Math.min(m.y0, m.y0 + m.dy)); y <= Math.ceil(Math.max(m.y0, m.y0 + m.dy)); y++) {
-      for (let x = Math.floor(Math.min(m.x0, m.x0 + m.dx)); x < Math.ceil(Math.max(m.x0, m.x0 + m.dx) + m.w); x++) if (x >= 0 && y >= 0 && x < cols && y < rows) support[y * cols + x] = 1;
+      for (let x = Math.floor(Math.min(m.x0, m.x0 + m.dx)); x < Math.ceil(Math.max(m.x0, m.x0 + m.dx) + m.w); x++) if (x >= 0 && x < cols && y >= 0 && y < rows) support[y * cols + x] = 1;
     }
   }
   // Yo mido cuánto aire hay debajo de cada celda: subir lejos de un apoyo es caro (no se puede volar).
@@ -225,7 +226,7 @@ function search(start, gemIndex = -1) {
       open.push({ n: c, f: c.t + h(c) * WEIGHT });
     }
   }
-  return { node: null, expanded, closest: closest.p };
+  return { node: null, expanded, limited: open.size > 0, closest: closest.p };
 }
 
 // Yo busco con A* cualquier meta, con un límite de tiempo simulado para no perderme en esperas eternas.
@@ -299,14 +300,23 @@ export function checkLevel(level) {
   const fought = prelude(root);
   if (!fought) return out;
   const exit = search(fought);
-  if (!exit.node) { out.ok = false; out.notes.push(`sin ruta a la salida (${exit.expanded} estados; llegué hasta x=${exit.closest.cx.toFixed(1)} y=${exit.closest.cy.toFixed(1)})`); return out; }
+  if (!exit.node) {
+    out.ok = false;
+    out.notes.push(`${searchFailure(exit)} para la salida; llegué hasta x=${exit.closest.cx.toFixed(1)} y=${exit.closest.cy.toFixed(1)}`);
+    return out;
+  }
   out.best = exit.node.t;
   map.gems.forEach((g, i) => {
     // Yo, en una arena, verifico cada gema después de la pelea (la arena queda quieta y la puerta abierta).
     const r = map.boss ? search(fought, i) : search(root, i);
-    if (!r.node) { out.ok = false; out.notes.push(`gema ${i + 1} (${g.x},${g.y}) sin ruta que la recoja y salga (${r.expanded} estados)`); }
+    if (!r.node) { out.ok = false; out.notes.push(`gema ${i + 1} (${g.x},${g.y}): ${searchFailure(r)} para recogerla y salir`); }
   });
   return out;
+}
+
+function searchFailure(result) {
+  const reason = result.limited ? 'límite de búsqueda alcanzado' : 'búsqueda agotada sin hallar ruta';
+  return `${reason} (${result.expanded} estados)`;
 }
 
 // Yo escribo js/levels/medals.js con el tiempo de oro de cada nivel (ruta × 1.3 + 1.5, a medio segundo).
@@ -325,9 +335,42 @@ function writeMedals(rows) {
   console.log(`✔ Medallas de oro escritas para ${rows.length} niveles`);
 }
 
+function reportLevel(level, label = level.id) {
+  const t0 = Date.now();
+  const result = checkLevel(level);
+  const secs = ((Date.now() - t0) / 1000).toFixed(1);
+  const best = result.best != null ? `ruta ${result.best.toFixed(1)}s · par ${level.par}s` : '';
+  const notes = result.notes.length ? `\n    → ${result.notes.join('\n    → ')}` : '';
+  console.log(`${result.ok ? '✔' : '✘'} ${label} ${result.name || ''} [${result.size}] ${best} (${secs}s)${notes}`);
+  return result;
+}
+
+function checkSurvival(args) {
+  const [seed, first, count = 1] = args.map(Number);
+  const valid = args.length >= 2 && args.length <= 3 && args.every((arg) => /^\d+$/.test(arg)) &&
+    [seed, first, count].every(Number.isSafeInteger) && first >= 1 && count >= 1 &&
+    Number.isSafeInteger(first + count - 1);
+  if (!valid) {
+    console.error('Uso: node tools/check-levels.mjs --survival SEMILLA SALA [CANTIDAD]. La primera sala es 1.');
+    return 2;
+  }
+  let failed = 0;
+  for (let offset = 0; offset < count; offset++) {
+    const room = first + offset;
+    const level = getSurvivalLevel(seed, room - 1);
+    if (!reportLevel(level, `semilla ${seed} · sala ${room}`).ok) failed++;
+  }
+  console.log(`${count - failed}/${count} salas con rutas verificadas`);
+  return failed ? 1 : 0;
+}
+
 // Yo recorro los mundos hechos a mano (o solo el nivel pedido por argumentos).
 function main() {
   const args = process.argv.slice(2);
+  if (args[0] === '--survival') {
+    process.exitCode = checkSurvival(args.slice(1));
+    return;
+  }
   const medals = args.includes('--medals');
   const [wArg, lArg] = args.filter((a) => !a.startsWith('--')).map(Number);
   let failed = 0;
@@ -336,14 +379,9 @@ function main() {
     if (world.source !== 'hand' || (wArg !== undefined && !Number.isNaN(wArg) && world.id !== wArg)) continue;
     for (let l = 0; l < world.count; l++) {
       if (lArg !== undefined && !Number.isNaN(lArg) && l !== lArg) continue;
-      const level = getCampaignLevel(world.id, l);
-      const t0 = Date.now();
-      const r = checkLevel(level);
-      const secs = ((Date.now() - t0) / 1000).toFixed(1);
+      const r = reportLevel(getCampaignLevel(world.id, l));
       if (!r.ok) failed++;
       else rows.push(r);
-      const best = r.best != null ? `ruta ${r.best.toFixed(1)}s · par ${level.par}s` : '';
-      console.log(`${r.ok ? '✔' : '✘'} ${r.id} ${r.name || ''} [${r.size}] ${best} (${secs}s)${r.notes.length ? `\n    → ${r.notes.join('\n    → ')}` : ''}`);
     }
   }
   // Yo solo reescribo las medallas si revisé la campaña completa y todo pasó.
@@ -352,4 +390,4 @@ function main() {
 }
 
 // Yo solo corro la revisión cuando me ejecutan directamente (así otros scripts pueden importarme).
-if (import.meta.url === pathToFileURL(process.argv[1]).href) main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

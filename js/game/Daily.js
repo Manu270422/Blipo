@@ -22,6 +22,11 @@ export function dailyNumber(d = new Date()) {
   return Math.floor((utc - DAILY_EPOCH) / 86400000) + 1;
 }
 
+// Yo fijo las fechas y el número del reto al seleccionarlo.
+export function dailyChallenge(d = new Date()) {
+  return { key: dateKey(d), previousKey: yesterdayKey(d), n: dailyNumber(d) };
+}
+
 // Yo calculo cuánto falta para el siguiente reto (medianoche local).
 export function msToNextDaily(now = new Date()) {
   const next = new Date(now);

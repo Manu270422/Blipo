@@ -20,9 +20,10 @@ export class MenuView {
     const d = this.storage.data;
     // Yo actualizo todos los monederos de la app.
     this.root.querySelectorAll('[data-bind="sparks"]').forEach((el) => { el.textContent = formatNumber(d.wallet.sparks); });
-    // Yo muestro dónde continúa la campaña.
-    const { world, level } = d.last;
-    this.q('[data-bind="continue-label"]').textContent = `${t(WORLDS[world].key)} · ${level + 1}`;
+    // Yo muestro el mismo destino que se abre al pulsar Continuar.
+    const { world, level } = this.progress.continueTarget();
+    const destination = level === null ? t('levels_btn') : level + 1;
+    this.q('[data-bind="continue-label"]').textContent = `${t(WORLDS[world].key)} · ${destination}`;
     // Yo muestro el estado del reto diario.
     const done = this.progress.dailyDone();
     const hrs = Math.ceil(msToNextDaily() / 3600000);
