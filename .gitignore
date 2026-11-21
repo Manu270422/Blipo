@@ -2,6 +2,16 @@
 node_modules/
 www/
 android/app/build/
+android/.idea/
 .DS_Store
+local.properties
+*.apk
+*.aab
 *.keystore
 *.jks
+key.properties
+keystore.properties
+signing.properties
+.env
+.env.*
+!.env.example

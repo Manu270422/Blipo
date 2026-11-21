@@ -4,7 +4,7 @@ import { t } from '../core/I18n.js';
 import { bus } from '../core/EventBus.js';
 import { formatTime } from '../core/Format.js';
 import { WORLDS, getCampaignLevel, getDailyLevel, getSurvivalLevel } from '../levels/worlds.js';
-import { dateKey, dailyNumber } from '../game/Daily.js';
+import { dateKey, dailyChallenge } from '../game/Daily.js';
 import { getSkin } from '../entities/Skins.js';
 import { resultStats } from '../ui/views/ResultView.js';
 import { shareText } from './Share.js';
@@ -29,12 +29,15 @@ export class Session {
   // Yo arranco un nivel de campaña; la primera vez muestro el tutorial antes.
   startCampaign(w, l) {
     // Yo protejo contra niveles o mundos bloqueados.
-    if (!this.progress.isWorldUnlocked(w) || !this.progress.isLevelUnlocked(w, l)) { w = 0; l = 0; }
+    if (!this.progress.isLevelUnlocked(w, l)) { w = 0; l = 0; }
     const level = getCampaignLevel(w, l);
     this.mode = 'campaign';
     this.ctx = { w, l, level };
-    // Yo recuerdo el último nivel abierto para el botón "Jugar".
-    this.storage.data.last = { world: w, level: l };
+    // Yo recuerdo el nivel pendiente sin perder el avance al volver a jugar uno superado.
+    if (!this.progress.record(w, l)?.cleared) {
+      this.storage.data.last = { world: w, level: l };
+      this.storage.save();
+    }
     const label = `${w + 1}-${l + 1}`;
     // Yo presento el nivel con su mundo, su nombre y el tiempo para el oro.
     const times = medalTimes(level);
@@ -43,13 +46,14 @@ export class Session {
   }
 
   // Yo arranco el reto diario del día (mismo nivel para todo el mundo).
-  startDaily() {
-    const key = dateKey();
+  startDaily(challenge = dailyChallenge()) {
+    const { key, n } = challenge;
     const level = getDailyLevel(key);
     this.mode = 'daily';
-    this.ctx = { key, level, n: dailyNumber() };
-    const banner = { top: t('daily_title'), title: t('daily_label', { n: this.ctx.n }), goal: t('banner_par', { s: level.par.toFixed(0) }) };
-    this.withTutorial(() => this.begin(level, { label: t('daily_label', { n: this.ctx.n }), mode: 'gems', slots: 3 }, null, { ghostId: `daily-${key}`, banner }));
+    this.ctx = { ...challenge, level };
+    const label = t('daily_label', { n });
+    const banner = { top: t('daily_title'), title: label, goal: t('banner_par', { s: level.par.toFixed(0) }) };
+    this.withTutorial(() => this.begin(level, { label, mode: 'gems', slots: 3 }, null, { ghostId: level.id, banner }));
   }
 
   // Yo arranco una carrera nueva de supervivencia con semilla aleatoria.
@@ -216,14 +220,16 @@ export class Session {
   // Yo guardo el reto diario, sumo racha y ofrezco compartir.
   completeDaily(summary) {
     const { app } = this;
-    const { level, n } = this.ctx;
-    const res = this.progress.saveDaily(summary, level.par);
-    // Yo guardo el fantasma del mejor intento de hoy y borro los de días anteriores.
-    if (summary.recording && res.best && res.best.time === summary.time) {
-      ghostStore.save(`daily-${this.ctx.key}`, summary.recording);
-      ghostStore.pruneDaily(`daily-${this.ctx.key}`);
+    const { level, ...challenge } = this.ctx;
+    const { key, n } = challenge;
+    const res = this.progress.saveDaily(summary, level.par, challenge);
+    const isToday = key === dateKey();
+    // Yo guardo el fantasma con la fecha del nivel y conservo el de hoy al cerrar un reto anterior.
+    const canRestoreGhost = res.best?.time === summary.time && res.best.deaths === summary.deaths && !ghostStore.load(level.id);
+    if (summary.recording && (res.isRecord || canRestoreGhost)) {
+      if (ghostStore.save(level.id, summary.recording) && isToday) ghostStore.pruneDaily(level.id);
     }
-    app.trackMission('dailyClears');
+    if (isToday) app.trackMission('dailyClears');
     const rewards = [];
     if (res.sparks > 0) rewards.push({ text: t('reward_sparks', { n: res.sparks }) });
     rewards.push({ icon: 'i-flame', text: t('reward_streak', { n: res.streak }), record: res.streakUp });
@@ -242,7 +248,7 @@ export class Session {
       rewards,
       actions: [
         { id: 'home', icon: 'i-home', label: t('menu'), ghost: true, run: () => app.goMenu() },
-        { id: 'retry', icon: 'i-restart', label: t('retry'), run: () => { app.result.hide(); this.startDaily(); } },
+        { id: 'retry', icon: 'i-restart', label: t('retry'), run: () => { app.result.hide(); this.startDaily(challenge); } },
         { id: 'share', icon: 'i-share', label: t('share'), text: true, primary: true, run: () => shareText(shareMsg, app.toast) },
       ],
     });

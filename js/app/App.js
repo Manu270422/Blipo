@@ -270,8 +270,9 @@ export class App {
         break;
       case 'continue': {
         this.audio.sfx('click');
-        const { world, level } = d.last;
-        this.session.startCampaign(world, level);
+        const { world, level } = this.progress.continueTarget();
+        if (level === null) this.openWorlds(world);
+        else this.session.startCampaign(world, level);
         break;
       }
       case 'daily': this.audio.sfx('click'); this.session.startDaily(); break;
@@ -329,7 +330,7 @@ export class App {
     bus.on('input:restart', () => this.session.restart());
     bus.on('game:complete', (summary) => this.session.complete(summary));
     bus.on('game:over', (summary) => this.session.over(summary));
-    bus.on('game:gem', () => { this.audio.sfx('gem'); this.haptics.pulse(15); this.trackMission('gemPickups'); });
+    bus.on('game:gem', () => this.trackMission('gemPickups'));
     bus.on('stat', ({ key }) => {
       this.progress.bump(key);
       this.trackMission(key);
@@ -416,14 +417,9 @@ export class App {
     this.updateRotateHint();
   }
 
-  // Yo reservo espacio para el HUD arriba y los controles abajo en vertical.
+  // Yo dejo el viewport completo para el nivel. Los controles flotan sobre el canvas.
   layout() {
-    const inGame = this.screens.current === 'game';
-    const portrait = this.root.clientHeight > this.root.clientWidth;
-    this.game.insets = {
-      top: inGame ? this.hud.height() : 0,
-      bottom: inGame && portrait ? this.touch.height() : 0,
-    };
+    this.game.insets = { top: 0, bottom: 0 };
     this.game.layout();
   }
 
