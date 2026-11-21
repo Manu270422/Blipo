@@ -6,17 +6,22 @@
   "license": "UNLICENSED",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "npx --yes serve . -l 5173",
     "build:web": "node tools/build-web.mjs",
     "check:levels": "node tools/check-levels.mjs",
-    "cap:init": "npx cap add android",
-    "cap:sync": "npm run build:web && npx cap sync android",
-    "cap:open": "npx cap open android"
+    "cap:init": "npm run build:web && cap add android",
+    "cap:sync": "npm run build:web && cap sync android",
+    "cap:open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.6.2",
+    "@capacitor/core": "8.6.2"
   },
   "devDependencies": {
-    "@capacitor/android": "^7.0.0",
-    "@capacitor/cli": "^7.0.0",
-    "@capacitor/core": "^7.0.0"
+    "@capacitor/cli": "8.6.2"
   }
 }

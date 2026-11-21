@@ -46,7 +46,9 @@ export function getDailyLevel(dateKey) {
 
 // Yo devuelvo una sala del modo supervivencia; la dificultad sube con cada sala.
 export function getSurvivalLevel(runSeed, room) {
-  const def = generateLevel(runSeed + room * 7727, Math.min(1, 0.15 + room * 0.06));
+  const seed = runSeed + room * 7727;
+  const difficulty = Math.min(1, 0.15 + room * 0.06);
+  const def = generateLevel(seed, difficulty, { survival: true });
   return { ...def, id: `survival-${room}`, hue: (runSeed + room * 47) % 360, music: 'w4' };
 }
 

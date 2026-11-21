@@ -2,7 +2,7 @@
 import { GAME, ECONOMY } from '../config.js';
 import { WORLDS, levelKey } from '../levels/worlds.js';
 import { SKINS } from '../entities/Skins.js';
-import { dateKey, yesterdayKey } from './Daily.js';
+import { dailyChallenge, dateKey, yesterdayKey } from './Daily.js';
 import { medalTimes, medalFor } from './Medals.js';
 
 export class Progress {
@@ -40,12 +40,23 @@ export class Progress {
   }
 
   // Yo decido si un mundo está abierto.
-  isWorldUnlocked(w) { return this.totalStars() >= WORLDS[w].unlock; }
+  isWorldUnlocked(w) {
+    return Number.isInteger(w) && !!WORLDS[w] && this.totalStars() >= WORLDS[w].unlock;
+  }
 
   // Yo decido si un nivel está abierto (el anterior debe estar superado).
   isLevelUnlocked(w, l) {
-    if (!this.isWorldUnlocked(w)) return false;
+    if (!this.isWorldUnlocked(w) || !Number.isInteger(l) || l < 0 || l >= WORLDS[w].count) return false;
     return l === 0 || !!this.record(w, l - 1)?.cleared;
+  }
+
+  // Yo resuelvo el destino que el menú muestra y abre al pulsar Continuar.
+  continueTarget() {
+    const { world, level } = this.data.last;
+    if (!Number.isInteger(world) || !WORLDS[world]) return { world: 0, level: 0 };
+    if (this.isLevelUnlocked(world, level)) return { world, level };
+    const openWorld = WORLDS.slice(0, world + 1).reverse().find((w) => this.isWorldUnlocked(w.id));
+    return { world: openWorld?.id ?? 0, level: null };
   }
 
   // Yo devuelvo el siguiente nivel disponible o null si terminó la campaña.
@@ -85,46 +96,54 @@ export class Progress {
     this.data.stats.levelsCleared += 1;
     this.data.stats.gems += Math.max(0, newGems);
     if (result.deaths === 0) this.data.stats.flawless += 1;
-    this.data.last = this.next(w, l) ? { world: this.next(w, l).w, level: this.next(w, l).l } : { world: w, level: l };
+    // Yo mantengo el destino de Continuar al repetir un nivel ya superado.
+    if (!prev.cleared) {
+      const next = this.next(w, l);
+      this.data.last = next ? { world: next.w, level: next.l } : { world: w, level: l };
+    }
     this.store.save();
     return { stars, newStars, newGems, sparks, bestTime, isRecord, firstClear: !prev.cleared, medal, newMedal: medal > prev.medal, times };
   }
 
   // Yo guardo el resultado del reto diario y actualizo la racha.
-  saveDaily(result, par) {
-    const today = dateKey();
+  saveDaily(result, par, { key: day, previousKey } = dailyChallenge()) {
     const d = this.data.daily;
     const stars = Progress.stars(par, result.time, result.deaths);
-    const prev = d.results[today];
+    const prev = d.results[day];
+    const isRecord = !prev || result.time < prev.time;
     let sparks = 0;
     let streakUp = false;
-    // Yo pago y subo la racha solo la primera vez del día.
-    if (d.lastCompleted !== today) {
-      d.streak = d.lastCompleted === yesterdayKey() ? d.streak + 1 : 1;
+    // Yo pago la primera victoria de un reto nuevo sin retroceder la racha.
+    if (!prev && (!d.lastCompleted || day > d.lastCompleted)) {
+      d.streak = d.lastCompleted === previousKey ? d.streak + 1 : 1;
       d.bestStreak = Math.max(d.bestStreak, d.streak);
-      d.lastCompleted = today;
+      d.lastCompleted = day;
       sparks = ECONOMY.DAILY_BASE + Math.min(d.streak, ECONOMY.DAILY_STREAK_CAP) * ECONOMY.DAILY_STREAK_BONUS;
       this.data.wallet.sparks += sparks;
       streakUp = true;
     }
     // Yo conservo el mejor resultado del día.
-    if (!prev || result.time < prev.time) d.results[today] = { time: result.time, deaths: result.deaths, stars: Math.max(stars, prev?.stars || 0) };
+    if (isRecord) d.results[day] = { time: result.time, deaths: result.deaths, stars: Math.max(stars, prev?.stars || 0) };
     // Yo limpio resultados de más de 60 días para no inflar el guardado.
     const keys = Object.keys(d.results).sort();
     while (keys.length > 60) delete d.results[keys.shift()];
     this.store.save();
-    return { stars, sparks, streak: d.streak, streakUp, best: d.results[today] };
+    return { stars, sparks, streak: d.streak, streakUp, isRecord, best: d.results[day] };
   }
 
   // Yo devuelvo la racha vigente (se rompe si pasó más de un día).
   currentStreak() {
     const d = this.data.daily;
-    if (d.lastCompleted === dateKey() || d.lastCompleted === yesterdayKey()) return d.streak;
+    const now = new Date();
+    if (d.lastCompleted === dateKey(now) || d.lastCompleted === yesterdayKey(now)) return d.streak;
     return 0;
   }
 
   // Yo digo si el reto de hoy ya está hecho.
-  dailyDone() { return this.data.daily.lastCompleted === dateKey(); }
+  dailyDone() {
+    const today = dateKey();
+    return this.data.daily.lastCompleted === today || !!this.data.daily.results[today];
+  }
 
   // Yo guardo una carrera de supervivencia.
   saveSurvival(rooms) {
